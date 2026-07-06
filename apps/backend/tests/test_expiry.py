@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
-from sqlalchemy import select
 
 from app.core.crypto import encrypt_secret
 from app.core.db import get_session_factory

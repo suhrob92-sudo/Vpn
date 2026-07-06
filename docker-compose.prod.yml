@@ -1,0 +1,44 @@
+# Production overrides: Caddy terminates TLS; internal services are not
+# published on the host at all.
+services:
+  reverse-proxy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - backend
+      - miniapp
+      - admin
+    restart: unless-stopped
+
+  postgres:
+    ports: []
+
+  redis:
+    ports: []
+
+  backend:
+    ports: []
+
+  miniapp:
+    ports: []
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: https://${DOMAIN}/api
+
+  admin:
+    ports: []
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: https://${DOMAIN}/api
+
+volumes:
+  caddydata:
+  caddyconfig:
