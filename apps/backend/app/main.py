@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import admin, auth, payments, plans, servers, sub, subscriptions, users
+from app.api import admin, auth, internal, payments, plans, servers, sub, subscriptions, users
 from app.core.config import get_settings
 from app.core.db import get_session_factory
 from app.core.logging import setup_logging
@@ -132,6 +132,7 @@ def create_app() -> FastAPI:
     app.include_router(servers.router)
     app.include_router(sub.router)
     app.include_router(admin.router)
+    app.include_router(internal.router)
     return app
 
 

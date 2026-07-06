@@ -1,0 +1,48 @@
+"""Bot entrypoint (long polling)."""
+import asyncio
+import logging
+import sys
+
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.types import BotCommand
+
+from bot.config import get_settings
+from bot.handlers import commands, stars
+
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stdout,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+BOT_COMMANDS = [
+    BotCommand(command="start", description="Boshlash / asosiy menyu"),
+    BotCommand(command="subscription", description="Obuna holati"),
+    BotCommand(command="profile", description="Profil"),
+    BotCommand(command="servers", description="Serverlar ro'yxati"),
+    BotCommand(command="stars", description="Stars bilan to'lash"),
+    BotCommand(command="help", description="Yordam"),
+    BotCommand(command="support", description="Qo'llab-quvvatlash"),
+]
+
+
+async def main() -> None:
+    settings = get_settings()
+    if not settings.bot_token:
+        raise SystemExit("BOT_TOKEN is not set")
+
+    bot = Bot(settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp = Dispatcher()
+    dp.include_router(stars.router)   # payment updates must win over generic text handlers
+    dp.include_router(commands.router)
+
+    await bot.set_my_commands(BOT_COMMANDS)
+    logger.info("bot started (polling)")
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
