@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-bg text-txt antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card {
+  @apply bg-card rounded-2xl p-4 shadow-lg shadow-black/30 border border-white/5;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl px-4 py-3
+         active:scale-[0.98] transition disabled:opacity-50 text-center block w-full;
+}
+
+.btn-ghost {
+  @apply bg-white/5 text-txt font-medium rounded-xl px-4 py-3 active:scale-[0.98] transition text-center block w-full;
+}
+
+.skeleton {
+  @apply animate-pulse bg-white/10 rounded-xl;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.5); }
+  70% { box-shadow: 0 0 0 24px rgba(108, 92, 231, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); }
+}
+.pulse-ring { animation: pulse-ring 2.2s infinite; }
