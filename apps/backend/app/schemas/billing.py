@@ -12,6 +12,7 @@ class PlanOut(BaseModel):
     description: str | None
     price: Decimal
     currency: str
+    price_stars: int
     duration_days: int
     traffic_limit_gb: int
     device_hint: int
@@ -26,6 +27,7 @@ class PlanCreate(BaseModel):
     description: str | None = None
     price: Decimal = Field(gt=0)
     currency: str = "USDT"
+    price_stars: int = Field(ge=0, default=0)
     duration_days: int = Field(gt=0)
     traffic_limit_gb: int = Field(ge=0, default=0)
     device_hint: int = Field(ge=1, default=3)
@@ -40,6 +42,7 @@ class PlanPatch(BaseModel):
     description: str | None = None
     price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = None
+    price_stars: int | None = Field(default=None, ge=0)
     duration_days: int | None = Field(default=None, gt=0)
     traffic_limit_gb: int | None = Field(default=None, ge=0)
     device_hint: int | None = Field(default=None, ge=1)

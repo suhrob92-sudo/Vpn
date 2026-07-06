@@ -37,15 +37,15 @@ def open_app_button(text: str = "🚀 Mini App'ni ochish", path: str = "") -> In
 
 
 def stars_plans_keyboard(plans: list[dict]) -> InlineKeyboardMarkup:
-    """Inline buttons for XTR-priced plans payable with Telegram Stars."""
+    """Inline buttons for plans payable with Telegram Stars (price_stars > 0)."""
     rows = [
         [
             InlineKeyboardButton(
-                text=f"⭐ {p['name']} — {int(float(p['price']))} Stars",
+                text=f"⭐ {p['name']} — {int(p['price_stars'])} Stars",
                 callback_data=f"stars:{p['id']}",
             )
         ]
         for p in plans
-        if p["currency"] == "XTR"
+        if p.get("price_stars", 0) > 0
     ]
     return InlineKeyboardMarkup(inline_keyboard=rows)

@@ -14,6 +14,7 @@ from app.core.ratelimit import rate_limit
 from app.models import Payment, Plan, User
 from app.schemas.billing import PaymentCreateIn, PaymentOut
 from app.schemas.common import ok
+from app.services.telegram import create_stars_invoice_link
 from app.services.payments import (
     CryptoBotProvider,
     create_payment,
@@ -49,6 +50,32 @@ async def create(
     payment = await create_payment(db, user, plan, provider)
     await db.commit()
     return ok(PaymentOut.model_validate(payment).model_dump(mode="json"))
+
+
+@router.post("/stars/create", dependencies=[Depends(rate_limit("payments", limit=10))])
+async def create_stars_invoice(
+    body: PaymentCreateIn,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return a Telegram Stars invoice link for the Mini App to open with
+    WebApp.openInvoice(). Activation happens when the bot receives the
+    resulting `successful_payment` (idempotent by charge id)."""
+    plan = await db.get(Plan, body.plan_id)
+    if plan is None or not plan.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    if plan.price_stars <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This plan is not available for Stars payment",
+        )
+    link = await create_stars_invoice_link(
+        title=f"VPN — {plan.name}",
+        description=plan.description or f"{plan.duration_days} kunlik VPN obuna",
+        payload=f"plan:{plan.id}",
+        stars_amount=plan.price_stars,
+    )
+    return ok({"invoice_link": link})
 
 
 @router.get("/{payment_id}")

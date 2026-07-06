@@ -10,6 +10,7 @@ interface Plan {
   description: string | null;
   price: string;
   currency: string;
+  price_stars: number;
   duration_days: number;
   traffic_limit_gb: number;
   device_hint: number;
@@ -22,8 +23,9 @@ interface Plan {
 const empty = {
   name: "",
   description: "",
-  price: "3",
-  currency: "USDT",
+  price: "149",
+  currency: "RUB",
+  price_stars: 100,
   duration_days: 30,
   traffic_limit_gb: 0,
   device_hint: 3,
@@ -100,8 +102,9 @@ export default function PlansPage() {
         <div className="card mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           {field("name", "Name")}
           {field("description", "Description")}
-          {field("price", "Price")}
-          {field("currency", "Currency (USDT/XTR)")}
+          {field("price", "Card price")}
+          {field("currency", "Currency (RUB/USDT)")}
+          {field("price_stars", "Stars price (0 = off)", "number")}
           {field("duration_days", "Duration days", "number")}
           {field("traffic_limit_gb", "Traffic GB (0=∞)", "number")}
           {field("device_hint", "Device hint", "number")}

@@ -50,20 +50,20 @@ async def seed_default_plans() -> None:
                 Plan(
                     name="1 oylik",
                     description="30 kunlik standart obuna",
-                    price=149, currency="RUB", duration_days=30,
+                    price=149, currency="RUB", price_stars=100, duration_days=30,
                     traffic_limit_gb=0, device_hint=3, sort_order=1,
                 ),
                 Plan(
                     name="3 oylik",
                     description="90 kun · chegirma bilan",
-                    price=399, currency="RUB", duration_days=90,
+                    price=399, currency="RUB", price_stars=250, duration_days=90,
                     traffic_limit_gb=0, device_hint=3,
                     discount_percent=11, is_popular=True, sort_order=2,
                 ),
                 Plan(
                     name="12 oylik",
                     description="365 kun · maksimal chegirma",
-                    price=1390, currency="RUB", duration_days=365,
+                    price=1390, currency="RUB", price_stars=850, duration_days=365,
                     traffic_limit_gb=0, device_hint=3,
                     discount_percent=22, sort_order=3,
                 ),

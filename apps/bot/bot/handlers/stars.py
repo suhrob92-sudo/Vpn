@@ -20,16 +20,16 @@ router = Router()
 @router.message(Command("stars"))
 async def cmd_stars(message: Message) -> None:
     plans = await api_client.get_plans()
-    xtr = [p for p in plans if p["currency"] == "XTR"]
-    if not xtr:
+    payable = [p for p in plans if p.get("price_stars", 0) > 0]
+    if not payable:
         await message.answer(
             "⭐ Hozircha Stars bilan to'lanadigan tariflar yo'q.\n"
-            "💎 Tariflar bo'limidan kripto orqali to'lashingiz mumkin."
+            "💎 Tariflar bo'limidan bank kartasi orqali to'lashingiz mumkin."
         )
         return
     await message.answer(
         "⭐ <b>Telegram Stars bilan to'lash</b>\nTarifni tanlang:",
-        reply_markup=stars_plans_keyboard(xtr),
+        reply_markup=stars_plans_keyboard(payable),
     )
 
 
@@ -38,7 +38,7 @@ async def stars_invoice(callback: CallbackQuery) -> None:
     plan_id = int(callback.data.split(":", 1)[1])
     plans = {p["id"]: p for p in await api_client.get_plans()}
     plan = plans.get(plan_id)
-    if plan is None or plan["currency"] != "XTR":
+    if plan is None or plan.get("price_stars", 0) <= 0:
         await callback.answer("Tarif topilmadi", show_alert=True)
         return
     await callback.message.answer_invoice(
@@ -46,7 +46,7 @@ async def stars_invoice(callback: CallbackQuery) -> None:
         description=plan.get("description") or f"{plan['duration_days']} kunlik VPN obuna",
         payload=f"plan:{plan_id}",
         currency="XTR",
-        prices=[LabeledPrice(label=plan["name"], amount=int(float(plan["price"])))],
+        prices=[LabeledPrice(label=plan["name"], amount=int(plan["price_stars"]))],
     )
     await callback.answer()
 

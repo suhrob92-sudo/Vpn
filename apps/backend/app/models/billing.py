@@ -29,6 +29,8 @@ class Plan(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text)
     price: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     currency: Mapped[str] = mapped_column(String(8), default="USDT", nullable=False)
+    # Price in Telegram Stars (XTR, integer). 0 = Stars payment disabled for this plan.
+    price_stars: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
     traffic_limit_gb: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # 0 = unlimited
     device_hint: Mapped[int] = mapped_column(Integer, default=3, nullable=False)  # informational only
