@@ -24,7 +24,11 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     bot_token: str = ""
+    bot_username: str = ""  # without @, used to build referral invite links
     admin_chat_id: int = 0
+
+    referral_bonus_days: int = 7
+    expiry_reminder_days: int = 3
 
     cryptobot_api_token: str = ""
     cryptobot_api_url: str = "https://pay.crypt.bot/api"

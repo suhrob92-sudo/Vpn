@@ -51,6 +51,8 @@ class Subscription(TimestampMixin, Base):
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
+    # When the pre-expiry reminder was sent; reset whenever expires_at moves.
+    reminder_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     plan: Mapped[Plan] = relationship(lazy="joined")
 

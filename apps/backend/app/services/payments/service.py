@@ -12,6 +12,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.time import aware_utc
 from app.models import (
     Payment,
     PaymentStatus,
@@ -24,6 +25,7 @@ from app.models import (
 )
 from app.services.payments.base import PaymentProvider
 from app.services.payments.cryptobot import CryptoBotProvider
+from app.services.referral import apply_pending_rewards, apply_referral_reward_on_payment
 from app.services.subscription import ensure_token
 from app.services.vpn_manager import create_access
 from app.services.vpn_manager.xui_client import XuiError
@@ -90,13 +92,15 @@ async def activate_payment(db: AsyncSession, payment: Payment) -> Subscription |
         )
     )
     duration = timedelta(days=plan.duration_days)
-    if sub and sub.expires_at > now:
+    if sub and aware_utc(sub.expires_at) > now:
         sub.plan_id = plan.id
-        sub.expires_at = sub.expires_at + duration
+        sub.expires_at = aware_utc(sub.expires_at) + duration
+        sub.reminder_sent_at = None
     elif sub:
         sub.plan_id = plan.id
         sub.started_at = now
         sub.expires_at = now + duration
+        sub.reminder_sent_at = None
     else:
         sub = Subscription(
             user_id=user.id,
@@ -110,6 +114,11 @@ async def activate_payment(db: AsyncSession, payment: Payment) -> Subscription |
 
     await ensure_token(db, user)
     await provision_subscription(db, user, sub, plan)
+
+    # Referral rewards (v1.1): reward the inviter on this user's first payment,
+    # and cash in any rewards this user earned while having no active sub.
+    await apply_referral_reward_on_payment(db, user)
+    await apply_pending_rewards(db, user)
     return sub
 
 

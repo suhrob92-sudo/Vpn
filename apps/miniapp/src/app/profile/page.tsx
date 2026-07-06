@@ -14,13 +14,25 @@ interface Sub {
 
 export default function Profile() {
   const [sub, setSub] = useState<Sub | null | undefined>(undefined);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const user = typeof window !== "undefined" ? getTgUser() : null;
 
   useEffect(() => {
     apiFetch<Sub | null>("/subscriptions/me").then(setSub).catch((e) => setError(e.message));
+    apiFetch<{ invite_link: string | null }>("/users/me")
+      .then((me) => setInviteLink(me.invite_link))
+      .catch(() => {});
   }, []);
+
+  async function copyInvite() {
+    if (!inviteLink) return;
+    await navigator.clipboard.writeText(inviteLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   async function renew() {
     setRenewing(true);
@@ -95,6 +107,21 @@ export default function Profile() {
           ) : (
             <p className="text-sm text-muted">Faol obuna yo'q.</p>
           )}
+        </section>
+      )}
+
+      {inviteLink && (
+        <section className="card">
+          <h2 className="font-semibold mb-1">🎁 Do'stlarni taklif qiling</h2>
+          <p className="text-xs text-muted mb-3">
+            Do'stingiz birinchi obunasini sotib olsa, sizga bonus kunlar qo'shiladi.
+          </p>
+          <div className="bg-black/40 rounded-xl p-3 text-xs break-all font-mono text-muted">
+            {inviteLink}
+          </div>
+          <button className="btn-ghost mt-3" onClick={copyInvite}>
+            {copied ? "✓ Nusxalandi" : "📋 Havolani nusxalash"}
+          </button>
         </section>
       )}
 

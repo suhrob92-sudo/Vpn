@@ -230,6 +230,7 @@ async def patch_user(
         if sub is None:
             raise HTTPException(status_code=409, detail="User has no active subscription")
         sub.expires_at = sub.expires_at + timedelta(days=body.bonus_days)
+        sub.reminder_sent_at = None
 
     await db.commit()
     return ok(UserOut.model_validate(user).model_dump(mode="json"))

@@ -23,6 +23,7 @@ BOT_COMMANDS = [
     BotCommand(command="subscription", description="Obuna holati"),
     BotCommand(command="profile", description="Profil"),
     BotCommand(command="servers", description="Serverlar ro'yxati"),
+    BotCommand(command="invite", description="Do'st taklif qilish (bonus)"),
     BotCommand(command="stars", description="Stars bilan to'lash"),
     BotCommand(command="help", description="Yordam"),
     BotCommand(command="support", description="Qo'llab-quvvatlash"),

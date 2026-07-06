@@ -6,7 +6,7 @@ Jobs:
 - sync_traffic — optional periodic traffic refresh hook (best effort).
 """
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from arq import cron
 from arq.connections import RedisSettings
@@ -15,6 +15,7 @@ from sqlalchemy import select
 from app.core.config import get_settings
 from app.core.db import get_session_factory
 from app.core.logging import setup_logging
+from app.core.time import aware_utc
 from app.models import (
     AccessStatus,
     Subscription,
@@ -32,6 +33,13 @@ EXPIRED_MESSAGE = (
     "⏳ <b>Obunangiz muddati tugadi</b>\n\n"
     "VPN ulanishingiz to'xtatildi. Xizmatdan yana foydalanish uchun "
     "obunani uzaytiring: bot menyusidan «💎 Tariflar» bo'limini oching."
+)
+
+REMINDER_MESSAGE = (
+    "🔔 <b>Eslatma:</b> obunangiz tugashiga <b>{days} kun</b> qoldi "
+    "({date} gacha).\n\n"
+    "Uzluksiz ishlashi uchun obunani hozir uzaytiring — "
+    "profil bo'limidagi «♻️ Obunani uzaytirish» tugmasi orqali."
 )
 
 
@@ -78,6 +86,45 @@ async def check_expired_subscriptions(ctx: dict) -> int:
     return processed
 
 
+async def send_expiry_reminders(ctx: dict) -> int:
+    """Warn users whose subscription expires within `expiry_reminder_days`.
+    Sent once per subscription period (reminder_sent_at resets on renewal)."""
+    settings = get_settings()
+    now = datetime.now(timezone.utc)
+    window_end = now + timedelta(days=settings.expiry_reminder_days)
+    sent = 0
+    async with get_session_factory()() as db:
+        subs = (
+            await db.scalars(
+                select(Subscription).where(
+                    Subscription.status == SubscriptionStatus.ACTIVE.value,
+                    Subscription.expires_at > now,
+                    Subscription.expires_at <= window_end,
+                    Subscription.reminder_sent_at.is_(None),
+                )
+            )
+        ).all()
+        for sub in subs:
+            user = await db.get(User, sub.user_id)
+            if user is None:
+                continue
+            expires = aware_utc(sub.expires_at)
+            days_left = max(1, (expires - now).days or 1)
+            delivered = await send_message(
+                user.telegram_id,
+                REMINDER_MESSAGE.format(days=days_left, date=expires.strftime("%d.%m.%Y")),
+            )
+            if delivered:
+                sub.reminder_sent_at = now
+                await db.commit()
+                sent += 1
+            else:
+                await db.rollback()
+    if sent:
+        logger.info("sent %s expiry reminders", sent)
+    return sent
+
+
 async def sync_traffic(ctx: dict) -> None:
     """Placeholder-free hook: traffic is read live from the panel API on demand
     (profile/connect endpoints); a periodic cache refresh can be added here
@@ -91,9 +138,10 @@ async def startup(ctx: dict) -> None:
 
 
 class WorkerSettings:
-    functions = [check_expired_subscriptions, sync_traffic]
+    functions = [check_expired_subscriptions, send_expiry_reminders, sync_traffic]
     cron_jobs = [
-        cron(check_expired_subscriptions, minute=7),  # hourly at :07
+        cron(check_expired_subscriptions, minute=7),          # hourly at :07
+        cron(send_expiry_reminders, hour=9, minute=30),       # daily at 09:30 UTC
     ]
     on_startup = startup
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)

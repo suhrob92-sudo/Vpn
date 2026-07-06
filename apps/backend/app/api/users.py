@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.config import get_settings
 from app.core.db import get_db
 from app.models import AccessStatus, Subscription, SubscriptionStatus, User, VpnAccess, VpnServer
 from app.schemas.common import ok
@@ -16,9 +17,18 @@ from app.services.vpn_manager import get_traffic
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+def _invite_link(user: User) -> str | None:
+    bot_username = get_settings().bot_username
+    if not bot_username:
+        return None
+    return f"https://t.me/{bot_username}?start={user.referral_code}"
+
+
 @router.get("/me")
 async def me(user: User = Depends(get_current_user)):
-    return ok(UserOut.model_validate(user).model_dump(mode="json"))
+    data = UserOut.model_validate(user).model_dump(mode="json")
+    data["invite_link"] = _invite_link(user)
+    return ok(data)
 
 
 @router.patch("/me")

@@ -118,6 +118,21 @@ async def cmd_subscription(message: Message) -> None:
         )
 
 
+@router.message(Command("invite"))
+async def cmd_invite(message: Message) -> None:
+    profile = await _load_profile(message)
+    if profile is None:
+        return
+    me = await message.bot.get_me()
+    link = f"https://t.me/{me.username}?start={profile['user']['referral_code']}"
+    await message.answer(
+        "🎁 <b>Do'stlaringizni taklif qiling!</b>\n\n"
+        "Taklif qilgan do'stingiz birinchi marta obuna sotib olsa, "
+        "sizga bonus kunlar qo'shiladi.\n\n"
+        f"Shaxsiy havolangiz:\n<code>{link}</code>"
+    )
+
+
 @router.message(Command("servers"))
 @router.message(F.text == "🌍 Serverlar")
 async def cmd_servers(message: Message) -> None:
