@@ -19,7 +19,13 @@ from app.services.payments import (
     create_payment,
     handle_cryptobot_webhook,
     handle_stars_payment,
+    handle_yookassa_webhook,
+    is_trusted_ip,
 )
+
+# Providers whose invoices can be created from the Mini App (card/crypto with a
+# hosted payment page). Stars are created by the bot, not here.
+_API_PROVIDERS = {"yookassa", "cryptobot"}
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -34,12 +40,13 @@ async def create(
     plan = await db.get(Plan, body.plan_id)
     if plan is None or not plan.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
-    if body.provider != "cryptobot":
+    provider = body.provider or get_settings().default_payment_provider
+    if provider not in _API_PROVIDERS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only cryptobot payments are created via API; Stars go through the bot",
+            detail=f"Provider must be one of {sorted(_API_PROVIDERS)}; Stars go through the bot",
         )
-    payment = await create_payment(db, user, plan, body.provider)
+    payment = await create_payment(db, user, plan, provider)
     await db.commit()
     return ok(PaymentOut.model_validate(payment).model_dump(mode="json"))
 
@@ -71,6 +78,29 @@ async def cryptobot_webhook(secret: str, request: Request, db: AsyncSession = De
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="bad signature")
 
     await handle_cryptobot_webhook(db, raw_body)
+    await db.commit()
+    return ok({"received": True})
+
+
+@router.post("/webhook/yookassa/{secret}")
+async def yookassa_webhook(secret: str, request: Request, db: AsyncSession = Depends(get_db)):
+    """YooKassa notification. YooKassa does not sign the body, so genuineness is
+    established by three independent checks: secret URL segment, source-IP
+    allowlist, and an authoritative GET re-check of the payment inside the
+    handler. Activation stays idempotent (unique provider_payment_id)."""
+    settings = get_settings()
+    if not hmac.compare_digest(secret, settings.yookassa_webhook_secret):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+        request.client.host if request.client else None
+    )
+    if not is_trusted_ip(client_ip):
+        logger.warning("yookassa webhook from untrusted ip: %s", client_ip)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="untrusted source")
+
+    raw_body = await request.body()
+    await handle_yookassa_webhook(db, raw_body)
     await db.commit()
     return ok({"received": True})
 

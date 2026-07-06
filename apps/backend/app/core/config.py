@@ -35,6 +35,15 @@ class Settings(BaseSettings):
     cryptobot_asset: str = "USDT"
     cryptobot_webhook_secret: str = "webhook-secret"
 
+    # YooKassa (ЮKassa) — Russian bank cards (Sberbank, Mir, SBP)
+    yookassa_shop_id: str = ""
+    yookassa_secret_key: str = ""
+    yookassa_webhook_secret: str = "yk-webhook-secret"
+    yookassa_return_url: str = "https://vpn.example.com/app/payment/success"
+
+    # Which provider the Mini App "buy"/"renew" flow uses by default.
+    default_payment_provider: str = "yookassa"
+
     jwt_secret: str = "dev-secret-change-me"
     encryption_key: str = ""
     admin_bootstrap_username: str = "admin"

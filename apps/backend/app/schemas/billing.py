@@ -61,7 +61,7 @@ class SubscriptionOut(BaseModel):
 
 class PaymentCreateIn(BaseModel):
     plan_id: int
-    provider: str = "cryptobot"
+    provider: str | None = None  # None → backend default (default_payment_provider)
 
 
 class PaymentOut(BaseModel):

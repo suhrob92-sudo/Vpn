@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.ratelimit import rate_limit
 from app.models import Plan, Subscription, SubscriptionStatus, User
@@ -53,6 +54,6 @@ async def renew(user: User = Depends(get_current_user), db: AsyncSession = Depen
             status_code=status.HTTP_409_CONFLICT,
             detail="Current plan is unavailable — choose a new plan",
         )
-    payment = await create_payment(db, user, plan, "cryptobot")
+    payment = await create_payment(db, user, plan, get_settings().default_payment_provider)
     await db.commit()
     return ok(PaymentOut.model_validate(payment).model_dump(mode="json"))

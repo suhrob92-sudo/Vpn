@@ -32,7 +32,7 @@ export default function Plans() {
     try {
       const payment = await apiFetch<{ invoice_url: string }>("/payments/create", {
         method: "POST",
-        body: JSON.stringify({ plan_id: plan.id, provider: "cryptobot" }),
+        body: JSON.stringify({ plan_id: plan.id }), // provider = backend default (YooKassa)
       });
       if (payment.invoice_url) openExternal(payment.invoice_url);
     } catch (e: any) {
@@ -46,7 +46,8 @@ export default function Plans() {
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold">💎 Tariflar</h1>
       <p className="text-sm text-muted -mt-2">
-        To'lov CryptoBot orqali (USDT/TON). To'lov tasdiqlangach obuna avtomatik faollashadi.
+        To'lov bank kartasi orqali (Sber, Mir, SBP va boshqalar). To'lov tasdiqlangach
+        obuna avtomatik faollashadi.
       </p>
 
       {error && <div className="card border-danger/40 text-danger text-sm">{error}</div>}
@@ -75,7 +76,8 @@ export default function Plans() {
             </div>
             <div className="text-right">
               <p className="font-bold text-lg">
-                {parseFloat(plan.price)} <span className="text-sm">{plan.currency}</span>
+                {parseFloat(plan.price)}{" "}
+                <span className="text-sm">{plan.currency === "RUB" ? "₽" : plan.currency}</span>
               </p>
               {plan.discount_percent > 0 && (
                 <p className="text-xs text-success">-{plan.discount_percent}% chegirma</p>

@@ -25,6 +25,7 @@ from app.models import (
 )
 from app.services.payments.base import PaymentProvider
 from app.services.payments.cryptobot import CryptoBotProvider
+from app.services.payments.yookassa import YooKassaProvider
 from app.services.referral import apply_pending_rewards, apply_referral_reward_on_payment
 from app.services.subscription import ensure_token
 from app.services.vpn_manager import create_access
@@ -36,6 +37,8 @@ logger = logging.getLogger(__name__)
 def get_provider(name: str) -> PaymentProvider:
     if name == "cryptobot":
         return CryptoBotProvider()
+    if name == "yookassa":
+        return YooKassaProvider()
     raise ValueError(f"unknown payment provider: {name}")
 
 
@@ -164,6 +167,37 @@ async def handle_cryptobot_webhook(db: AsyncSession, raw_body: bytes) -> Subscri
         payment = await db.get(Payment, int(internal_id)) if internal_id else None
     if payment is None:
         logger.warning("webhook for unknown invoice %s", provider_payment_id)
+        return None
+    return await activate_payment(db, payment)
+
+
+async def handle_yookassa_webhook(db: AsyncSession, raw_body: bytes) -> Subscription | None:
+    """Process a YooKassa notification. The caller has already checked the source
+    IP + secret URL segment; here we RE-FETCH the payment from YooKassa and trust
+    only that authoritative status before activating (webhooks are unsigned)."""
+    update = json.loads(raw_body)
+    if update.get("event") != "payment.succeeded":
+        return None
+    obj = update.get("object") or {}
+    yk_id = obj.get("id")
+    if not yk_id:
+        return None
+
+    # Authoritative re-check — never trust the notification body alone.
+    status = await YooKassaProvider().get_payment_status(yk_id)
+    if status != "succeeded":
+        logger.warning("yookassa webhook for %s but status=%s — ignored", yk_id, status)
+        return None
+
+    provider_payment_id = f"yookassa:{yk_id}"
+    payment = await db.scalar(
+        select(Payment).where(Payment.provider_payment_id == provider_payment_id)
+    )
+    if payment is None:
+        internal_id = (obj.get("metadata") or {}).get("payment_id")
+        payment = await db.get(Payment, int(internal_id)) if internal_id else None
+    if payment is None:
+        logger.warning("yookassa webhook for unknown payment %s", provider_payment_id)
         return None
     return await activate_payment(db, payment)
 

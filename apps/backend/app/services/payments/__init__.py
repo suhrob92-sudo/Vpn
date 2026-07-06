@@ -5,14 +5,19 @@ from app.services.payments.service import (
     create_payment,
     handle_cryptobot_webhook,
     handle_stars_payment,
+    handle_yookassa_webhook,
 )
+from app.services.payments.yookassa import YooKassaProvider, is_trusted_ip
 
 __all__ = [
     "PaymentProvider",
     "InvoiceResult",
     "CryptoBotProvider",
+    "YooKassaProvider",
+    "is_trusted_ip",
     "create_payment",
     "activate_payment",
     "handle_cryptobot_webhook",
+    "handle_yookassa_webhook",
     "handle_stars_payment",
 ]
