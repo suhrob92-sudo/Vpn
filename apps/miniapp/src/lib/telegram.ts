@@ -9,8 +9,11 @@ export interface TgUser {
   photo_url?: string;
 }
 
+export type Platform = "android" | "ios" | "macos" | "windows" | "unknown";
+
 interface TelegramWebApp {
   initData: string;
+  platform?: string;
   initDataUnsafe: { user?: TgUser; start_param?: string };
   ready: () => void;
   expand: () => void;
@@ -32,6 +35,23 @@ export function getInitData(): string {
 
 export function getTgUser(): TgUser | null {
   return getTg()?.initDataUnsafe?.user ?? null;
+}
+
+// Best-effort device detection: Telegram's platform field first, UA as fallback.
+export function getPlatform(): Platform {
+  const tgp = getTg()?.platform?.toLowerCase() ?? "";
+  if (tgp === "ios") return "ios";
+  if (tgp === "macos") return "macos";
+  if (tgp === "android" || tgp === "android_x") return "android";
+
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  if (/iphone|ipad|ipod/i.test(ua)) return "ios";
+  if (/android/i.test(ua)) return "android";
+  if (/macintosh|mac os x/i.test(ua)) return "macos";
+  if (/windows/i.test(ua)) return "windows";
+  // Telegram Desktop (tdesktop) is most often Windows for this audience.
+  if (tgp === "tdesktop" || tgp === "web" || tgp === "weba" || tgp === "webk") return "windows";
+  return "unknown";
 }
 
 export function openExternal(url: string) {
