@@ -14,15 +14,19 @@ interface Server {
   inbound_id: number;
   host: string;
   port: number;
+  transport: string;
+  security: string;
   public_key: string;
   short_id: string;
   sni: string;
+  network_path: string;
+  header_host: string;
   status: string;
 }
 
 const empty = {
   name: "",
-  country: "DE",
+  country: "FI",
   city: "",
   panel_url: "",
   panel_user: "",
@@ -30,9 +34,13 @@ const empty = {
   inbound_id: 1,
   host: "",
   port: 443,
+  transport: "tcp",
+  security: "reality",
   public_key: "",
   short_id: "",
   sni: "",
+  network_path: "",
+  header_host: "",
   status: "ONLINE",
 };
 
@@ -130,18 +138,44 @@ export default function ServersPage() {
 
       {form && (
         <div className="card mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-          {field("name", "Name (e.g. DE-1 Frankfurt)")}
-          {field("country", "Country code (DE)")}
+          {field("name", "Name (e.g. FI Wi-Fi / FI LTE)")}
+          {field("country", "Country code (FI)")}
           {field("city", "City")}
-          {field("host", "Client host/IP")}
+          {field("host", "Client host/IP (or CDN domain)")}
           {field("port", "Client port", "number")}
           {field("panel_url", "Panel URL (with base path)")}
           {field("panel_user", "Panel user")}
           {field("panel_pass", form.id ? "Panel pass (blank = keep)" : "Panel pass", "password")}
           {field("inbound_id", "Inbound ID", "number")}
-          {field("public_key", "Reality public key")}
-          {field("short_id", "Reality short id")}
-          {field("sni", "SNI (e.g. yahoo.com)")}
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            Transport
+            <select
+              className="input"
+              value={form.transport}
+              onChange={(e) => setForm({ ...form, transport: e.target.value })}
+            >
+              <option value="tcp">tcp (Wi-Fi/Reality)</option>
+              <option value="ws">ws (LTE, CDN)</option>
+              <option value="grpc">grpc (LTE)</option>
+              <option value="xhttp">xhttp (LTE)</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            Security
+            <select
+              className="input"
+              value={form.security}
+              onChange={(e) => setForm({ ...form, security: e.target.value })}
+            >
+              <option value="reality">reality</option>
+              <option value="tls">tls</option>
+            </select>
+          </label>
+          {field("public_key", "Reality public key (reality only)")}
+          {field("short_id", "Reality short id (reality only)")}
+          {field("sni", "SNI / domain")}
+          {field("network_path", "Path (ws/xhttp) or serviceName (grpc)")}
+          {field("header_host", "Host header / Cloudflare domain (ws)")}
           <label className="flex flex-col gap-1 text-xs text-muted">
             Status
             <select
@@ -172,6 +206,7 @@ export default function ServersPage() {
               <th>ID</th>
               <th>Name</th>
               <th>Location</th>
+              <th>Transport</th>
               <th>Host</th>
               <th>Inbound</th>
               <th>Status</th>
@@ -186,6 +221,9 @@ export default function ServersPage() {
                 <td>
                   {s.country}
                   {s.city ? `, ${s.city}` : ""}
+                </td>
+                <td className="text-muted">
+                  {s.transport}/{s.security}
                 </td>
                 <td className="text-muted">
                   {s.host}:{s.port}

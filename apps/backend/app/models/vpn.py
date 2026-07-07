@@ -34,12 +34,24 @@ class VpnServer(TimestampMixin, Base):
     panel_user: Mapped[str] = mapped_column(String(128), nullable=False)
     panel_pass_encrypted: Mapped[str] = mapped_column(Text, nullable=False)  # Fernet
     inbound_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    # Connection parameters for building client links (VLESS + Reality)
+    # Connection parameters for building client links.
     host: Mapped[str] = mapped_column(String(255), nullable=False)
     port: Mapped[int] = mapped_column(Integer, default=443, nullable=False)
-    public_key: Mapped[str] = mapped_column(String(255), nullable=False)
-    short_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    # Transport / security select which VLESS link is built:
+    #   transport: tcp | ws | grpc | xhttp
+    #   security:  reality | tls
+    # This is how one physical VPS is offered as several configs — Reality/TCP
+    # for Wi-Fi, WS/TLS or gRPC (ideally behind Cloudflare) for mobile LTE bypass.
+    transport: Mapped[str] = mapped_column(String(16), default="tcp", nullable=False)
+    security: Mapped[str] = mapped_column(String(16), default="reality", nullable=False)
+    # Reality-only (empty for tls transports)
+    public_key: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    short_id: Mapped[str] = mapped_column(String(64), default="", nullable=False)
     sni: Mapped[str] = mapped_column(String(255), nullable=False)
+    # ws/xhttp path or grpc serviceName
+    network_path: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    # Host header / CDN (Cloudflare) domain for ws/xhttp; empty = use host/sni
+    header_host: Mapped[str] = mapped_column(String(255), default="", nullable=False)
     status: Mapped[str] = mapped_column(
         String(16), default=ServerStatus.ONLINE.value, nullable=False
     )

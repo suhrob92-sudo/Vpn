@@ -340,9 +340,13 @@ async def create_server(
         inbound_id=body.inbound_id,
         host=body.host,
         port=body.port,
+        transport=body.transport,
+        security=body.security,
         public_key=body.public_key,
         short_id=body.short_id,
         sni=body.sni,
+        network_path=body.network_path,
+        header_host=body.header_host,
         status=body.status,
     )
     db.add(server)

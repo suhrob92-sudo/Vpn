@@ -93,23 +93,81 @@ async def test_panel_error_raises(respx_mock):
         await client.add_client(1, "uuid", "email")
 
 
-def test_vless_link_format():
-    from app.models import VpnAccess, VpnServer
+def _access():
+    from app.models import VpnAccess
+
+    return VpnAccess(
+        user_id=1, subscription_id=1, server_id=1, external_user_id="e", uuid="UUID-1"
+    )
+
+
+def test_vless_link_tcp_reality_wifi():
+    from app.models import VpnServer
     from app.services.vpn_manager.manager import build_vless_link
 
     server = VpnServer(
-        name="DE-1", country="DE", panel_url="x", panel_user="x",
+        name="FI-1", country="FI", panel_url="x", panel_user="x",
         panel_pass_encrypted="x", inbound_id=1, host="1.2.3.4", port=443,
+        transport="tcp", security="reality",
         public_key="PBK", short_id="SID", sni="yahoo.com",
     )
-    access = VpnAccess(
-        user_id=1, subscription_id=1, server_id=1,
-        external_user_id="e", uuid="UUID-1",
-    )
-    link = build_vless_link(access, server)
+    link = build_vless_link(_access(), server)
     assert link.startswith("vless://UUID-1@1.2.3.4:443?")
+    assert "type=tcp" in link
     assert "security=reality" in link
-    assert "pbk=PBK" in link
-    assert "sid=SID" in link
-    assert "sni=yahoo.com" in link
+    assert "pbk=PBK" in link and "sid=SID" in link
     assert "flow=xtls-rprx-vision" in link
+
+
+def test_vless_link_ws_tls_lte():
+    from app.models import VpnServer
+    from app.services.vpn_manager.manager import build_vless_link
+
+    server = VpnServer(
+        name="FI LTE", country="FI", panel_url="x", panel_user="x",
+        panel_pass_encrypted="x", inbound_id=2, host="cdn.example.com", port=443,
+        transport="ws", security="tls",
+        public_key="", short_id="", sni="cdn.example.com",
+        network_path="/vpnws", header_host="cdn.example.com",
+    )
+    link = build_vless_link(_access(), server)
+    assert "type=ws" in link
+    assert "security=tls" in link
+    assert "path=%2Fvpnws" in link  # url-encoded /vpnws
+    assert "host=cdn.example.com" in link
+    # flow MUST NOT appear for non-reality-tcp transports
+    assert "flow=" not in link
+    assert "pbk=" not in link
+
+
+def test_vless_link_grpc_reality():
+    from app.models import VpnServer
+    from app.services.vpn_manager.manager import build_vless_link
+
+    server = VpnServer(
+        name="FI gRPC", country="FI", panel_url="x", panel_user="x",
+        panel_pass_encrypted="x", inbound_id=3, host="1.2.3.4", port=443,
+        transport="grpc", security="reality",
+        public_key="PBK", short_id="SID", sni="yahoo.com", network_path="grpcsvc",
+    )
+    link = build_vless_link(_access(), server)
+    assert "type=grpc" in link
+    assert "serviceName=grpcsvc" in link
+    assert "flow=" not in link  # gRPC never uses vision flow
+
+
+def test_flow_only_for_tcp_reality():
+    from app.models import VpnServer
+    from app.services.vpn_manager.manager import _flow_for
+
+    def srv(t, s):
+        return VpnServer(
+            name="x", country="FI", panel_url="x", panel_user="x",
+            panel_pass_encrypted="x", inbound_id=1, host="h", port=443,
+            transport=t, security=s, sni="s",
+        )
+
+    assert _flow_for(srv("tcp", "reality")) == "xtls-rprx-vision"
+    assert _flow_for(srv("ws", "tls")) == ""
+    assert _flow_for(srv("grpc", "reality")) == ""
+    assert _flow_for(srv("tcp", "tls")) == ""
