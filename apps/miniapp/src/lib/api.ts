@@ -15,7 +15,17 @@ export class ApiError extends Error {
 
 async function authenticate(): Promise<void> {
   const initData = await waitForInitData();
-  if (!initData) throw new ApiError(401, "Telegram initData mavjud emas — Mini App'ni Telegram ichida oching");
+  if (!initData) {
+    const w = typeof window !== "undefined" ? (window as any) : {};
+    const tg = w.Telegram;
+    const diag =
+      `TG=${!!tg} WebApp=${!!tg?.WebApp} ` +
+      `platform=${tg?.WebApp?.platform ?? "-"} ` +
+      `ver=${tg?.WebApp?.version ?? "-"} ` +
+      `idLen=${(tg?.WebApp?.initData ?? "").length} ` +
+      `userLen=${JSON.stringify(tg?.WebApp?.initDataUnsafe ?? {}).length}`;
+    throw new ApiError(401, `initData bo'sh. Diagnostika → ${diag}`);
+  }
   const resp = await fetch(`${API}/auth/telegram`, {
     method: "POST",
     headers: { "content-type": "application/json" },
