@@ -1,6 +1,6 @@
 "use client";
 
-import { getInitData } from "@/lib/telegram";
+import { waitForInitData } from "@/lib/telegram";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -14,7 +14,7 @@ export class ApiError extends Error {
 }
 
 async function authenticate(): Promise<void> {
-  const initData = getInitData();
+  const initData = await waitForInitData();
   if (!initData) throw new ApiError(401, "Telegram initData mavjud emas — Mini App'ni Telegram ichida oching");
   const resp = await fetch(`${API}/auth/telegram`, {
     method: "POST",

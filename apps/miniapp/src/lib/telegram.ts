@@ -33,6 +33,26 @@ export function getInitData(): string {
   return getTg()?.initData ?? "";
 }
 
+// telegram-web-app.js may run slightly after React mounts, so initData can be
+// empty on the very first read. Poll briefly until it appears before giving up.
+export async function waitForInitData(timeoutMs = 4000): Promise<string> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const tg = getTg();
+    if (tg?.initData) {
+      try {
+        tg.ready();
+        tg.expand();
+      } catch {
+        /* ignore */
+      }
+      return tg.initData;
+    }
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return getTg()?.initData ?? "";
+}
+
 export function getTgUser(): TgUser | null {
   return getTg()?.initDataUnsafe?.user ?? null;
 }
