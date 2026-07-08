@@ -13,7 +13,7 @@ from app.api import admin, auth, internal, payments, plans, servers, sub, subscr
 from app.core.config import get_settings
 from app.core.db import get_session_factory
 from app.core.logging import setup_logging
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.models import AdminUser, Plan
 from app.schemas.common import err
 
@@ -37,6 +37,15 @@ async def bootstrap_admin() -> None:
             )
             await session.commit()
             logger.info("bootstrap admin user created: %s", settings.admin_bootstrap_username)
+        elif existing.username == settings.admin_bootstrap_username and not verify_password(
+            settings.admin_bootstrap_password, existing.password_hash
+        ):
+            # Env password is the source of truth for the bootstrap admin: if the
+            # stored hash no longer matches (e.g. the row predates the current
+            # ADMIN_BOOTSTRAP_PASSWORD), realign it so a restart restores access.
+            existing.password_hash = hash_password(settings.admin_bootstrap_password)
+            await session.commit()
+            logger.info("bootstrap admin password realigned: %s", settings.admin_bootstrap_username)
 
 
 async def seed_default_plans() -> None:
