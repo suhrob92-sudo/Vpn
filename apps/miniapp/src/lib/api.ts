@@ -18,13 +18,14 @@ async function authenticate(): Promise<void> {
   if (!initData) {
     const w = typeof window !== "undefined" ? (window as any) : {};
     const tg = w.Telegram;
+    const loc = typeof window !== "undefined" ? window.location : ({ hash: "", search: "" } as Location);
+    const hasData = (loc.hash + loc.search).includes("tgWebAppData");
     const diag =
-      `TG=${!!tg} WebApp=${!!tg?.WebApp} ` +
-      `platform=${tg?.WebApp?.platform ?? "-"} ` +
-      `ver=${tg?.WebApp?.version ?? "-"} ` +
+      `TG=${!!tg} WA=${!!tg?.WebApp} ` +
       `idLen=${(tg?.WebApp?.initData ?? "").length} ` +
-      `userLen=${JSON.stringify(tg?.WebApp?.initDataUnsafe ?? {}).length}`;
-    throw new ApiError(401, `initData bo'sh. Diagnostika → ${diag}`);
+      `hashLen=${loc.hash.length} ` +
+      `hasData=${hasData}`;
+    throw new ApiError(401, `initData bo'sh. Diag2 → ${diag}`);
   }
   const resp = await fetch(`${API}/auth/telegram`, {
     method: "POST",
