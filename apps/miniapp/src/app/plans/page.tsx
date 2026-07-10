@@ -23,11 +23,13 @@ export default function Plans() {
   const router = useRouter();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [balance, setBalance] = useState(0);
+  const [methods, setMethods] = useState<{ card: boolean; stars: boolean }>({ card: false, stars: true });
   const [buying, setBuying] = useState<string | null>(null); // `${id}:${method}`
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     apiPublic<Plan[]>("/plans").then(setPlans).catch((e) => setError(e.message));
+    apiPublic<{ card: boolean; stars: boolean }>("/payments/methods").then(setMethods).catch(() => {});
     apiFetch<{ balance: string }>("/users/me")
       .then((d) => setBalance(parseFloat(d.balance ?? "0")))
       .catch(() => {});
@@ -87,7 +89,9 @@ export default function Plans() {
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold">💎 Tariflar</h1>
       <p className="text-sm text-muted -mt-2">
-        To'lovni bank kartasi (Sber, Mir, СБП) yoki Telegram Stars orqali amalga oshiring.
+        {methods.card
+          ? "To'lovni bank kartasi (Sber, Mir, СБП) yoki Telegram Stars orqali amalga oshiring."
+          : "To'lovni Telegram Stars orqali amalga oshiring."}{" "}
         To'lov tasdiqlangach obuna avtomatik faollashadi.
       </p>
 
@@ -138,15 +142,17 @@ export default function Plans() {
             <li>📱 {plan.device_hint} qurilmagacha tavsiya etiladi</li>
           </ul>
           <div className="mt-4 flex flex-col gap-2">
-            <button
-              className="btn-primary"
-              disabled={buying === `${plan.id}:card`}
-              onClick={() => buyCard(plan)}
-            >
-              {buying === `${plan.id}:card`
-                ? "Ochilmoqda…"
-                : `💳 Karta bilan · ${parseFloat(plan.price)} ${plan.currency === "RUB" ? "₽" : plan.currency}`}
-            </button>
+            {methods.card && (
+              <button
+                className="btn-primary"
+                disabled={buying === `${plan.id}:card`}
+                onClick={() => buyCard(plan)}
+              >
+                {buying === `${plan.id}:card`
+                  ? "Ochilmoqda…"
+                  : `💳 Karta bilan · ${parseFloat(plan.price)} ${plan.currency === "RUB" ? "₽" : plan.currency}`}
+              </button>
+            )}
             {plan.price_stars > 0 && (
               <button
                 className="btn-ghost"

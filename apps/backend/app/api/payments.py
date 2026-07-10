@@ -35,6 +35,27 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 
+def _provider_configured(provider: str) -> bool:
+    s = get_settings()
+    if provider == "yookassa":
+        return bool(s.yookassa_shop_id and s.yookassa_secret_key)
+    if provider == "cryptobot":
+        return bool(s.cryptobot_api_token)
+    return False
+
+
+@router.get("/methods")
+async def payment_methods():
+    """Which payment methods the Mini App may offer (public, no auth)."""
+    s = get_settings()
+    return ok(
+        {
+            "card": _provider_configured(s.default_payment_provider),
+            "stars": bool(s.bot_token),
+        }
+    )
+
+
 @router.post("/create", dependencies=[Depends(rate_limit("payments", limit=10))])
 async def create(
     body: PaymentCreateIn,
@@ -49,6 +70,11 @@ async def create(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Provider must be one of {sorted(_API_PROVIDERS)}; Stars go through the bot",
+        )
+    if not _provider_configured(provider):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Karta to'lovi hozircha ulanmagan — Stars yoki balansdan foydalaning",
         )
     payment = await create_payment(db, user, plan, provider)
     await db.commit()
