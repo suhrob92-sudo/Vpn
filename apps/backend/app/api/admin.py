@@ -1,6 +1,8 @@
 """Admin API: auth (JWT access+refresh with rotation), dashboard, CRUD."""
 import logging
+import uuid as uuidlib
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 import jwt as pyjwt
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -27,11 +29,18 @@ from app.models import (
     VpnAccess,
     VpnServer,
 )
-from app.schemas.admin import AdminLoginIn, AdminRefreshIn, AdminUserPatch
+from app.schemas.admin import (
+    AdminBalanceIn,
+    AdminGiftIn,
+    AdminLoginIn,
+    AdminRefreshIn,
+    AdminUserPatch,
+)
 from app.schemas.billing import PaymentOut, PlanCreate, PlanOut, PlanPatch, SubscriptionOut
 from app.schemas.common import ok
 from app.schemas.user import UserOut
 from app.schemas.vpn import ServerAdminOut, ServerCreate, ServerPatch
+from app.services.payments import activate_payment
 from app.services.vpn_manager import revoke_access
 from app.services.vpn_manager.manager import panel_client
 from app.services.vpn_manager.xui_client import XuiError
@@ -249,6 +258,64 @@ async def _revoke_user_accesses(db: AsyncSession, user_id: int) -> None:
     ).all()
     for access, server in rows:
         await revoke_access(db, access, server)
+
+
+@router.post("/users/{user_id}/gift")
+async def gift_subscription(
+    user_id: int,
+    body: AdminGiftIn,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Gift a plan to a user: full activation flow (subscription + VPN clients)
+    via a zero-amount Payment, so it never counts as revenue but stays auditable."""
+    user = await db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    plan = await db.get(Plan, body.plan_id)
+    if plan is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+
+    payment = Payment(
+        user_id=user.id,
+        plan_id=plan.id,
+        provider="gift",
+        provider_payment_id=f"gift:{uuidlib.uuid4()}",
+        amount=Decimal("0"),
+        currency=plan.currency,
+        status=PaymentStatus.PENDING.value,
+    )
+    db.add(payment)
+    await db.flush()
+    sub = await activate_payment(db, payment)
+    await db.commit()
+    return ok(
+        {
+            "gifted": True,
+            "subscription": SubscriptionOut.model_validate(sub).model_dump(mode="json"),
+        }
+    )
+
+
+@router.post("/users/{user_id}/balance")
+async def adjust_balance(
+    user_id: int,
+    body: AdminBalanceIn,
+    _: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Top up (positive) or deduct (negative) a user's internal wallet."""
+    user = await db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    new_balance = Decimal(user.balance) + body.amount
+    if new_balance < 0:
+        raise HTTPException(
+            status_code=409, detail=f"Balance cannot go negative (current: {user.balance})"
+        )
+    user.balance = new_balance
+    await db.commit()
+    return ok(UserOut.model_validate(user).model_dump(mode="json"))
 
 
 @router.post("/users/{user_id}/revoke-access")

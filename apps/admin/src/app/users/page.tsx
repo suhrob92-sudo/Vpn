@@ -10,13 +10,24 @@ interface User {
   username: string | null;
   first_name: string | null;
   status: string;
+  balance: string;
   created_at: string;
+}
+
+interface Plan {
+  id: number;
+  name: string;
+  price: string;
+  currency: string;
+  duration_days: number;
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [q, setQ] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
 
   const load = useCallback(() => {
@@ -27,6 +38,10 @@ export default function UsersPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    adminFetch<Plan[]>("/admin/plans").then(setPlans).catch(() => {});
+  }, []);
 
   async function action(user: User, body: object) {
     setBusy(user.id);
@@ -54,6 +69,59 @@ export default function UsersPage() {
     }
   }
 
+  async function gift(user: User) {
+    const menu = plans
+      .map((p) => `${p.id} — ${p.name} (${parseFloat(p.price)} ${p.currency}, ${p.duration_days} kun)`)
+      .join("\n");
+    const answer = prompt(`Qaysi tarifni sovg'a qilamiz? Raqamini kiriting:\n\n${menu}`, String(plans[0]?.id ?? ""));
+    if (!answer) return;
+    const planId = parseInt(answer, 10);
+    if (!plans.some((p) => p.id === planId)) {
+      setError(`Plan #${answer} topilmadi`);
+      return;
+    }
+    setBusy(user.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await adminFetch(`/admin/users/${user.id}/gift`, {
+        method: "POST",
+        body: JSON.stringify({ plan_id: planId }),
+      });
+      setNotice(`✅ #${user.id} foydalanuvchiga obuna sovg'a qilindi`);
+      load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function topUp(user: User) {
+    const answer = prompt(
+      `Balans o'zgarishi (RUB). Musbat = to'ldirish, manfiy = yechish.\nJoriy balans: ${parseFloat(user.balance)} ₽`,
+      "100"
+    );
+    if (!answer) return;
+    const amount = parseFloat(answer);
+    if (isNaN(amount) || amount === 0) return;
+    setBusy(user.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const updated = await adminFetch<User>(`/admin/users/${user.id}/balance`, {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      });
+      setNotice(`✅ #${user.id} yangi balans: ${parseFloat(updated.balance)} ₽`);
+      load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <Shell>
       <div className="flex items-center justify-between mb-4">
@@ -66,6 +134,7 @@ export default function UsersPage() {
         />
       </div>
       {error && <p className="text-danger text-sm mb-3">{error}</p>}
+      {notice && <p className="text-success text-sm mb-3">{notice}</p>}
       <div className="card overflow-x-auto">
         <table className="table-base">
           <thead>
@@ -74,6 +143,7 @@ export default function UsersPage() {
               <th>Telegram</th>
               <th>Name</th>
               <th>Status</th>
+              <th>Balance</th>
               <th>Joined</th>
               <th>Actions</th>
             </tr>
@@ -92,8 +162,15 @@ export default function UsersPage() {
                     {u.status}
                   </span>
                 </td>
+                <td>{parseFloat(u.balance)} ₽</td>
                 <td className="text-muted">{u.created_at.slice(0, 10)}</td>
                 <td className="flex gap-2 flex-wrap">
+                  <button className="btn-outline" disabled={busy === u.id} onClick={() => gift(u)}>
+                    🎁 Gift
+                  </button>
+                  <button className="btn-outline" disabled={busy === u.id} onClick={() => topUp(u)}>
+                    💰 Balance
+                  </button>
                   <button
                     className="btn-outline"
                     disabled={busy === u.id}

@@ -22,12 +22,33 @@ interface Plan {
 export default function Plans() {
   const router = useRouter();
   const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [balance, setBalance] = useState(0);
   const [buying, setBuying] = useState<string | null>(null); // `${id}:${method}`
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     apiPublic<Plan[]>("/plans").then(setPlans).catch((e) => setError(e.message));
+    apiFetch<{ balance: string }>("/users/me")
+      .then((d) => setBalance(parseFloat(d.balance ?? "0")))
+      .catch(() => {});
   }, []);
+
+  async function buyBalance(plan: Plan) {
+    if (!confirm(`${plan.name} tarifini balansdan (${parseFloat(plan.price)} ₽) sotib olasizmi?`)) return;
+    setBuying(`${plan.id}:balance`);
+    setError(null);
+    try {
+      await apiFetch("/payments/balance/pay", {
+        method: "POST",
+        body: JSON.stringify({ plan_id: plan.id }),
+      });
+      router.push("/payment/success");
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBuying(null);
+    }
+  }
 
   async function buyCard(plan: Plan) {
     setBuying(`${plan.id}:card`);
@@ -69,6 +90,13 @@ export default function Plans() {
         To'lovni bank kartasi (Sber, Mir, СБП) yoki Telegram Stars orqali amalga oshiring.
         To'lov tasdiqlangach obuna avtomatik faollashadi.
       </p>
+
+      {balance > 0 && (
+        <div className="card flex items-center justify-between">
+          <p className="text-sm text-muted">💰 Balansingiz</p>
+          <p className="font-bold">{balance} ₽</p>
+        </div>
+      )}
 
       {error && <div className="card border-danger/40 text-danger text-sm">{error}</div>}
 
@@ -128,6 +156,17 @@ export default function Plans() {
                 {buying === `${plan.id}:stars`
                   ? "Ochilmoqda…"
                   : `⭐ Telegram Stars · ${plan.price_stars}`}
+              </button>
+            )}
+            {balance >= parseFloat(plan.price) && (
+              <button
+                className="btn-ghost"
+                disabled={buying === `${plan.id}:balance`}
+                onClick={() => buyBalance(plan)}
+              >
+                {buying === `${plan.id}:balance`
+                  ? "To'lanmoqda…"
+                  : `💰 Balansdan · ${parseFloat(plan.price)} ₽`}
               </button>
             )}
           </div>

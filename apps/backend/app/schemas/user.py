@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,6 +15,7 @@ class UserOut(BaseModel):
     language_code: str | None
     referral_code: str
     status: str
+    balance: Decimal
     created_at: datetime
 
 

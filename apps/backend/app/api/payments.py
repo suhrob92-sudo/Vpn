@@ -3,6 +3,8 @@ import hashlib
 import hmac
 import json
 import logging
+import uuid as uuidlib
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,12 +13,13 @@ from app.api.deps import get_current_user
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.ratelimit import rate_limit
-from app.models import Payment, Plan, User
+from app.models import Payment, PaymentStatus, Plan, User
 from app.schemas.billing import PaymentCreateIn, PaymentOut
 from app.schemas.common import ok
 from app.services.telegram import create_stars_invoice_link
 from app.services.payments import (
     CryptoBotProvider,
+    activate_payment,
     create_payment,
     handle_cryptobot_webhook,
     handle_stars_payment,
@@ -76,6 +79,47 @@ async def create_stars_invoice(
         stars_amount=plan.price_stars,
     )
     return ok({"invoice_link": link})
+
+
+@router.post("/balance/pay", dependencies=[Depends(rate_limit("payments", limit=10))])
+async def pay_from_balance(
+    body: PaymentCreateIn,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Buy a plan with the internal wallet (topped up by admins). Deduction and
+    activation happen in one transaction — a provisioning hiccup never leaves
+    the user charged without a subscription."""
+    plan = await db.get(Plan, body.plan_id)
+    if plan is None or not plan.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    if Decimal(user.balance) < Decimal(plan.price):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Balansingiz yetarli emas",
+        )
+
+    user.balance = Decimal(user.balance) - Decimal(plan.price)
+    payment = Payment(
+        user_id=user.id,
+        plan_id=plan.id,
+        provider="balance",
+        provider_payment_id=f"balance:{uuidlib.uuid4()}",
+        amount=plan.price,
+        currency=plan.currency,
+        status=PaymentStatus.PENDING.value,
+    )
+    db.add(payment)
+    await db.flush()
+    sub = await activate_payment(db, payment)
+    await db.commit()
+    return ok(
+        {
+            "paid": True,
+            "balance": str(user.balance),
+            "expires_at": sub.expires_at.isoformat() if sub else None,
+        }
+    )
 
 
 @router.get("/{payment_id}")

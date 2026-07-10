@@ -1,9 +1,19 @@
+from decimal import Decimal
+
 from pydantic import BaseModel
 
 
 class AdminLoginIn(BaseModel):
     username: str
     password: str
+
+
+class AdminGiftIn(BaseModel):
+    plan_id: int
+
+
+class AdminBalanceIn(BaseModel):
+    amount: Decimal  # positive = top up, negative = deduct
 
 
 class AdminTokensOut(BaseModel):
