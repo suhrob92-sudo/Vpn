@@ -49,6 +49,27 @@ async def cmd_start(message: Message, command: CommandObject) -> None:
     )
 
 
+# Reply-keyboard web_app buttons don't pass initData on some Telegram builds,
+# so the menu buttons are plain text and we hand out inline web_app buttons here.
+@router.message(F.text == "🚀 VPN'ni ulash")
+async def btn_connect(message: Message) -> None:
+    await message.answer(
+        "🚀 <b>VPN'ni ulash</b>\n\n"
+        "Quyidagi tugma orqali Mini App'ni oching — subscription URL, QR kod va "
+        "qurilmangiz uchun ilovalar ro'yxati o'sha yerda.",
+        reply_markup=open_app_button("🚀 VPN'ni ulash", "/connect"),
+    )
+
+
+@router.message(F.text == "💎 Tariflar")
+async def btn_plans(message: Message) -> None:
+    await message.answer(
+        "💎 <b>Tariflar</b>\n\n"
+        "Tarifni tanlab, Telegram Stars yoki bank kartasi bilan to'lang.",
+        reply_markup=open_app_button("💎 Tariflarni ochish", "/plans"),
+    )
+
+
 @router.message(Command("help"))
 @router.message(F.text == "🆘 Yordam")
 async def cmd_help(message: Message) -> None:

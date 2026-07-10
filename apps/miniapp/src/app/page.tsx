@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { getTg, getTgUser } from "@/lib/telegram";
+import { getTg, getTgUser, waitForInitData, type TgUser } from "@/lib/telegram";
 
 interface Sub {
   status: string;
@@ -14,11 +14,13 @@ interface Sub {
 export default function Home() {
   const [sub, setSub] = useState<Sub | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
-  const user = typeof window !== "undefined" ? getTgUser() : null;
+  const [user, setUser] = useState<TgUser | null>(null);
 
   useEffect(() => {
     getTg()?.ready();
     getTg()?.expand();
+    // telegram-web-app.js may fill user data slightly after mount — re-read once ready.
+    waitForInitData().then(() => setUser(getTgUser()));
     apiFetch<Sub | null>("/subscriptions/me")
       .then(setSub)
       .catch((e) => setError(e.message));

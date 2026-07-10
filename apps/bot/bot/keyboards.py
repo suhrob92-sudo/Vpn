@@ -10,13 +10,16 @@ from bot.config import get_settings
 
 
 def main_menu() -> ReplyKeyboardMarkup:
-    miniapp = get_settings().miniapp_url
+    # Plain text buttons only: reply-keyboard web_app buttons launch the Mini App
+    # WITHOUT initData on some Telegram Android builds, breaking auth. The text
+    # handlers reply with an inline web_app button instead, which (like the bot
+    # Menu Button) always provides initData.
     return ReplyKeyboardMarkup(
         resize_keyboard=True,
         keyboard=[
-            [KeyboardButton(text="🚀 VPN'ni ulash", web_app=WebAppInfo(url=f"{miniapp}/connect"))],
+            [KeyboardButton(text="🚀 VPN'ni ulash")],
             [
-                KeyboardButton(text="💎 Tariflar", web_app=WebAppInfo(url=f"{miniapp}/plans")),
+                KeyboardButton(text="💎 Tariflar"),
                 KeyboardButton(text="👤 Profil"),
             ],
             [
