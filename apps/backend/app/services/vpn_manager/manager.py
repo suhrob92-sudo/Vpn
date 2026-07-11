@@ -181,6 +181,13 @@ def build_vless_link(access: VpnAccess, server: VpnServer) -> str:
     security = server.security or "reality"
     params: dict[str, str] = {"type": transport, "security": security, "fp": "chrome"}
 
+    # A uTLS "chrome" fingerprint advertises h2 in the TLS ALPN and overrides the
+    # alpn field, so a CDN like Cloudflare negotiates HTTP/2 — over which the
+    # WebSocket Upgrade fails. Drop the fingerprint for ws/xhttp so the client
+    # offers only the http/1.1 alpn we set below and the WS handshake succeeds.
+    if transport in ("ws", "xhttp"):
+        params.pop("fp")
+
     if security == "reality":
         params["pbk"] = server.public_key
         params["sid"] = server.short_id

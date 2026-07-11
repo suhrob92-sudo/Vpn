@@ -138,6 +138,8 @@ def test_vless_link_ws_tls_lte():
     # WS Upgrade is HTTP/1.1 only — h2 in ALPN breaks the handshake behind a CDN.
     assert "alpn=http%2F1.1" in link
     assert "h2" not in link
+    # No uTLS fingerprint for ws: it would re-advertise h2 and override the alpn.
+    assert "fp=" not in link
     # flow MUST NOT appear for non-reality-tcp transports
     assert "flow=" not in link
     assert "pbk=" not in link
