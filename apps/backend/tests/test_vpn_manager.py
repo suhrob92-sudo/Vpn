@@ -135,6 +135,9 @@ def test_vless_link_ws_tls_lte():
     assert "security=tls" in link
     assert "path=%2Fvpnws" in link  # url-encoded /vpnws
     assert "host=cdn.example.com" in link
+    # WS Upgrade is HTTP/1.1 only — h2 in ALPN breaks the handshake behind a CDN.
+    assert "alpn=http%2F1.1" in link
+    assert "h2" not in link
     # flow MUST NOT appear for non-reality-tcp transports
     assert "flow=" not in link
     assert "pbk=" not in link

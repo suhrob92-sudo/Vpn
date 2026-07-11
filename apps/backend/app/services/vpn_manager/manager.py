@@ -187,7 +187,11 @@ def build_vless_link(access: VpnAccess, server: VpnServer) -> str:
         params["sni"] = server.sni
     else:  # tls
         params["sni"] = server.sni
-        params["alpn"] = "h2,http/1.1"
+        # WebSocket (and xhttp) do an HTTP/1.1 Upgrade, which breaks if ALPN
+        # negotiates h2 — so advertise only http/1.1 for those. Behind a CDN
+        # like Cloudflare this is what keeps the WS handshake working; h2 stays
+        # available for transports that can use it.
+        params["alpn"] = "http/1.1" if transport in ("ws", "xhttp") else "h2,http/1.1"
 
     # xtls-rprx-vision flow is valid ONLY for tcp+reality.
     if transport == "tcp" and security == "reality":
