@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiPublic } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 
 interface Server {
   id: number;
@@ -14,13 +15,14 @@ interface Server {
 const FLAGS: Record<string, string> = {
   DE: "🇩🇪", NL: "🇳🇱", FI: "🇫🇮", US: "🇺🇸", TR: "🇹🇷", AT: "🇦🇹", SE: "🇸🇪", GB: "🇬🇧", FR: "🇫🇷", PL: "🇵🇱",
 };
-const STATUS: Record<string, { label: string; cls: string; dot: string }> = {
-  ONLINE: { label: "Onlayn", cls: "text-accent bg-accent/10", dot: "bg-accent shadow-glow-accent" },
-  MAINTENANCE: { label: "Texnik ishlar", cls: "text-warning bg-warning/10", dot: "bg-warning" },
-  OFFLINE: { label: "O'chiq", cls: "text-danger bg-danger/10", dot: "bg-danger" },
+const STATUS: Record<string, { key: "online" | "maintenance" | "offline"; cls: string; dot: string }> = {
+  ONLINE: { key: "online", cls: "text-accent bg-accent/10", dot: "bg-accent shadow-glow-accent" },
+  MAINTENANCE: { key: "maintenance", cls: "text-warning bg-warning/10", dot: "bg-warning" },
+  OFFLINE: { key: "offline", cls: "text-danger bg-danger/10", dot: "bg-danger" },
 };
 
 export default function Servers() {
+  const { t } = useI18n();
   const [servers, setServers] = useState<Server[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,13 +36,13 @@ export default function Servers() {
     <div className="flex flex-col gap-4 animate-fade-up">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Serverlar</h1>
-          <p className="text-sm text-muted mt-1">Global tezkor tarmoq</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("servers_title")}</h1>
+          <p className="text-sm text-muted mt-1">{t("servers_sub")}</p>
         </div>
         {servers && (
           <span className="chip text-accent bg-accent/10 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-glow-accent" />
-            {online} onlayn
+            {online} {t("online").toLowerCase()}
           </span>
         )}
       </div>
@@ -52,7 +54,7 @@ export default function Servers() {
           <div className="skeleton h-[68px]" />
         </>
       )}
-      {servers?.length === 0 && <p className="text-muted text-sm">Serverlar hali qo'shilmagan.</p>}
+      {servers?.length === 0 && <p className="text-muted text-sm">{t("no_servers")}</p>}
 
       {servers?.map((s, i) => {
         const st = STATUS[s.status] ?? STATUS.OFFLINE;
@@ -76,15 +78,13 @@ export default function Servers() {
             </div>
             <span className={`chip flex items-center gap-1.5 ${st.cls}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
-              {st.label}
+              {t(st.key)}
             </span>
           </div>
         );
       })}
 
-      <p className="text-xs text-muted text-center px-4 mt-2">
-        Obunangiz barcha onlayn serverlarni o'z ichiga oladi — ilovada istalganini tanlang.
-      </p>
+      <p className="text-xs text-muted text-center px-4 mt-2">{t("servers_footer")}</p>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, apiPublic } from "@/lib/api";
 import { openExternal, openInvoice } from "@/lib/telegram";
+import { useI18n } from "@/lib/i18n";
 
 interface Plan {
   id: number;
@@ -20,6 +21,7 @@ interface Plan {
 }
 
 export default function Plans() {
+  const { t } = useI18n();
   const router = useRouter();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [balance, setBalance] = useState(0);
@@ -36,7 +38,7 @@ export default function Plans() {
   }, []);
 
   async function buyBalance(plan: Plan) {
-    if (!confirm(`${plan.name} tarifini balansdan (${parseFloat(plan.price)} ₽) sotib olasizmi?`)) return;
+    if (!confirm(`${plan.name} (${parseFloat(plan.price)} ₽) ${t("buy_balance_confirm")}`)) return;
     setBuying(`${plan.id}:balance`);
     setError(null);
     try {
@@ -90,10 +92,9 @@ export default function Plans() {
   return (
     <div className="flex flex-col gap-4 animate-fade-up">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tariflar</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("plans_title")}</h1>
         <p className="text-sm text-muted mt-1">
-          {methods.card ? "Karta (Sber, Mir, СБП) yoki Telegram Stars." : "Telegram Stars orqali."}{" "}
-          To'lovdan so'ng obuna avtomatik faollashadi.
+          {methods.card ? t("plans_sub_card") : t("plans_sub_stars")} {t("plans_sub_tail")}
         </p>
       </div>
 
@@ -101,7 +102,7 @@ export default function Plans() {
         <div className="glass p-4 flex items-center justify-between">
           <p className="text-sm text-muted flex items-center gap-2">
             <span className="h-8 w-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent">💰</span>
-            Balansingiz
+            {t("your_balance")}
           </p>
           <p className="font-bold text-lg">{balance} ₽</p>
         </div>
@@ -126,7 +127,7 @@ export default function Plans() {
         >
           {plan.is_popular && (
             <span className="absolute -top-2.5 left-5 chip text-white bg-gradient-to-r from-primary to-secondary shadow-glow">
-              ★ ENG MASHHUR
+              {t("popular")}
             </span>
           )}
           <div className="flex items-start justify-between">
@@ -149,17 +150,17 @@ export default function Plans() {
           <ul className="mt-4 grid grid-cols-3 gap-2 text-center">
             <li className="rounded-2xl bg-white/[0.04] py-2">
               <p className="text-sm font-semibold">{plan.duration_days}</p>
-              <p className="text-[10px] text-muted">kun</p>
+              <p className="text-[10px] text-muted">{t("days")}</p>
             </li>
             <li className="rounded-2xl bg-white/[0.04] py-2">
               <p className="text-sm font-semibold">
                 {plan.traffic_limit_gb > 0 ? `${plan.traffic_limit_gb}GB` : "∞"}
               </p>
-              <p className="text-[10px] text-muted">trafik</p>
+              <p className="text-[10px] text-muted">{t("traffic")}</p>
             </li>
             <li className="rounded-2xl bg-white/[0.04] py-2">
               <p className="text-sm font-semibold">{plan.device_hint}</p>
-              <p className="text-[10px] text-muted">qurilma</p>
+              <p className="text-[10px] text-muted">{t("devices")}</p>
             </li>
           </ul>
           <div className="mt-4 flex flex-col gap-2">
@@ -170,8 +171,8 @@ export default function Plans() {
                 onClick={() => buyCard(plan)}
               >
                 {buying === `${plan.id}:card`
-                  ? "Ochilmoqda…"
-                  : `💳 Karta · ${parseFloat(plan.price)} ${cur(plan.currency)}`}
+                  ? t("opening")
+                  : `💳 ${t("pay_card")} · ${parseFloat(plan.price)} ${cur(plan.currency)}`}
               </button>
             )}
             {plan.price_stars > 0 && (
@@ -180,7 +181,7 @@ export default function Plans() {
                 disabled={buying === `${plan.id}:stars`}
                 onClick={() => buyStars(plan)}
               >
-                {buying === `${plan.id}:stars` ? "Ochilmoqda…" : `⭐ Stars · ${plan.price_stars}`}
+                {buying === `${plan.id}:stars` ? t("opening") : `⭐ ${t("pay_stars")} · ${plan.price_stars}`}
               </button>
             )}
             {balance >= parseFloat(plan.price) && (
@@ -190,8 +191,8 @@ export default function Plans() {
                 onClick={() => buyBalance(plan)}
               >
                 {buying === `${plan.id}:balance`
-                  ? "To'lanmoqda…"
-                  : `💰 Balansdan · ${parseFloat(plan.price)} ₽`}
+                  ? t("paying")
+                  : `💰 ${t("pay_balance")} · ${parseFloat(plan.price)} ₽`}
               </button>
             )}
           </div>

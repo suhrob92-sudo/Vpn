@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 
 // Cosmetic page only. Activation happens strictly on the payment webhook —
 // we poll the subscription until the backend confirms it.
 export default function PaymentSuccess() {
+  const { t } = useI18n();
   const [state, setState] = useState<"waiting" | "active" | "slow">("waiting");
 
   useEffect(() => {
@@ -41,10 +43,8 @@ export default function PaymentSuccess() {
               <div className="h-12 w-12 rounded-full border-[3px] border-secondary border-t-transparent animate-spin" />
             </div>
           </div>
-          <h1 className="text-xl font-bold">To'lov tasdiqlanmoqda…</h1>
-          <p className="text-sm text-muted max-w-xs">
-            Odatda bir necha soniya. Obuna tasdiqlangach avtomatik faollashadi.
-          </p>
+          <h1 className="text-xl font-bold">{t("pay_verifying")}</h1>
+          <p className="text-sm text-muted max-w-xs">{t("pay_verifying_desc")}</p>
         </>
       )}
       {state === "active" && (
@@ -56,22 +56,20 @@ export default function PaymentSuccess() {
               🛡️
             </div>
           </div>
-          <h1 className="text-2xl font-bold">Obuna faollashtirildi!</h1>
-          <p className="text-sm text-muted max-w-xs">Endi VPN'ni istalgan qurilmaga ulashingiz mumkin.</p>
+          <h1 className="text-2xl font-bold">{t("pay_activated")}</h1>
+          <p className="text-sm text-muted max-w-xs">{t("pay_activated_desc")}</p>
           <div className="flex flex-col gap-3 w-full max-w-xs mt-2">
-            <Link href="/connect" className="btn-primary">🚀 VPN'ni ulash</Link>
-            <Link href="/" className="btn-ghost">Asosiyga qaytish</Link>
+            <Link href="/connect" className="btn-primary">{t("pay_connect")}</Link>
+            <Link href="/" className="btn-ghost">{t("pay_back_home")}</Link>
           </div>
         </>
       )}
       {state === "slow" && (
         <>
           <div className="h-28 w-28 rounded-full glass-hi flex items-center justify-center text-5xl">⏳</div>
-          <h1 className="text-xl font-bold">To'lov hali tasdiqlanmadi</h1>
-          <p className="text-sm text-muted max-w-xs">
-            Tarmoq tasdiqlashi kechikishi mumkin. Bir necha daqiqadan so'ng profilni tekshiring.
-          </p>
-          <Link href="/profile" className="btn-ghost max-w-xs">👤 Profilga o'tish</Link>
+          <h1 className="text-xl font-bold">{t("pay_slow")}</h1>
+          <p className="text-sm text-muted max-w-xs">{t("pay_slow_desc")}</p>
+          <Link href="/profile" className="btn-ghost max-w-xs">{t("pay_go_profile")}</Link>
         </>
       )}
     </div>

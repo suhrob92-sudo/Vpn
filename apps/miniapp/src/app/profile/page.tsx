@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { getTgUser } from "@/lib/telegram";
+import { useI18n, LangSwitch } from "@/lib/i18n";
 
 interface Sub {
   status: string;
@@ -13,6 +14,7 @@ interface Sub {
 }
 
 export default function Profile() {
+  const { t } = useI18n();
   const [sub, setSub] = useState<Sub | null | undefined>(undefined);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -56,7 +58,7 @@ export default function Profile() {
 
   return (
     <div className="flex flex-col gap-4 animate-fade-up">
-      <h1 className="text-2xl font-bold tracking-tight">Profil</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t("profile_title")}</h1>
 
       <section className="glass-hi p-5 flex items-center gap-4 relative overflow-hidden">
         <div className="absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-secondary/25 blur-3xl" />
@@ -77,9 +79,15 @@ export default function Profile() {
           </p>
           {user?.username && <p className="text-sm text-muted">@{user.username}</p>}
           <span className={`chip mt-1 inline-block ${active ? "text-accent bg-accent/10" : "text-muted bg-white/5"}`}>
-            {active ? "◆ PREMIUM" : "FREE"}
+            {active ? t("premium") : t("free")}
           </span>
         </div>
+      </section>
+
+      {/* Language */}
+      <section className="glass p-4">
+        <p className="text-muted text-[11px] uppercase tracking-wider mb-2">{t("language")}</p>
+        <LangSwitch />
       </section>
 
       {error && <div className="glass !border-danger/40 text-danger text-sm p-4">{error}</div>}
@@ -89,53 +97,51 @@ export default function Profile() {
         <>
           <div className="grid grid-cols-2 gap-3">
             <div className="glass p-4">
-              <p className="text-muted text-[11px]">Qolgan</p>
+              <p className="text-muted text-[11px]">{t("remaining")}</p>
               <p className="text-2xl font-bold mt-1">
                 {daysLeft}
-                <span className="text-sm font-medium text-muted"> kun</span>
+                <span className="text-sm font-medium text-muted"> {t("days")}</span>
               </p>
             </div>
             <div className="glass p-4">
-              <p className="text-muted text-[11px]">Tarif</p>
+              <p className="text-muted text-[11px]">{t("plan")}</p>
               <p className="text-lg font-semibold mt-1 truncate">{sub.plan.name}</p>
             </div>
             <div className="glass p-4">
-              <p className="text-muted text-[11px]">Trafik</p>
+              <p className="text-muted text-[11px]">{t("traffic")}</p>
               <p className="text-lg font-semibold mt-1">
-                {sub.plan.traffic_limit_gb > 0 ? `${sub.plan.traffic_limit_gb} GB` : "Cheksiz"}
+                {sub.plan.traffic_limit_gb > 0 ? `${sub.plan.traffic_limit_gb} GB` : t("unlimited")}
               </p>
             </div>
             <div className="glass p-4">
-              <p className="text-muted text-[11px]">Qurilmalar</p>
-              <p className="text-lg font-semibold mt-1">{sub.plan.device_hint} tagacha</p>
+              <p className="text-muted text-[11px]">{t("devices")}</p>
+              <p className="text-lg font-semibold mt-1">{sub.plan.device_hint} {t("up_to")}</p>
             </div>
           </div>
           <div className="glass p-4 flex items-center justify-between text-sm">
-            <span className="text-muted">Amal qiladi</span>
+            <span className="text-muted">{t("valid")}</span>
             <span className="font-medium">
-              {new Date(sub.started_at).toLocaleDateString("uz-UZ")} — {new Date(sub.expires_at).toLocaleDateString("uz-UZ")}
+              {new Date(sub.started_at).toLocaleDateString()} — {new Date(sub.expires_at).toLocaleDateString()}
             </span>
           </div>
         </>
       )}
       {sub !== undefined && !active && (
-        <div className="glass p-4 text-sm text-muted">Faol obuna yo'q.</div>
+        <div className="glass p-4 text-sm text-muted">{t("no_active_sub")}</div>
       )}
 
       {inviteLink && (
         <section className="glass p-5">
           <div className="flex items-center gap-2 mb-1">
             <span className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center">🎁</span>
-            <h2 className="font-semibold">Do'stlarni taklif qiling</h2>
+            <h2 className="font-semibold">{t("invite_title")}</h2>
           </div>
-          <p className="text-xs text-muted mb-3">
-            Do'stingiz birinchi obunasini sotib olsa — sizga bonus kunlar.
-          </p>
+          <p className="text-xs text-muted mb-3">{t("invite_desc")}</p>
           <div className="rounded-2xl bg-black/30 border border-white/5 p-3 text-xs break-all font-mono text-muted">
             {inviteLink}
           </div>
           <button className="btn-ghost mt-3" onClick={copyInvite}>
-            {copied ? "✓ Nusxalandi" : "📋 Havolani nusxalash"}
+            {copied ? t("copied") : t("copy_link")}
           </button>
         </section>
       )}
@@ -143,11 +149,11 @@ export default function Profile() {
       <div className="flex flex-col gap-3">
         {active && (
           <button className="btn-primary" onClick={renew} disabled={renewing}>
-            {renewing ? "Invoice yaratilmoqda…" : "♻️ Obunani uzaytirish"}
+            {renewing ? t("renewing") : t("renew")}
           </button>
         )}
-        <Link href="/connect" className="btn-ghost">🚀 VPN'ni qayta ulash</Link>
-        {!active && <Link href="/plans" className="btn-primary">💎 Tarif sotib olish</Link>}
+        <Link href="/connect" className="btn-ghost">{t("reconnect")}</Link>
+        {!active && <Link href="/plans" className="btn-primary">{t("buy_plan")}</Link>}
       </div>
     </div>
   );

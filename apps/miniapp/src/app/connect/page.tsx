@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { openExternal, getPlatform, type Platform } from "@/lib/telegram";
 import { APPS, PLATFORM_LABEL, type ImportVia } from "@/lib/apps";
+import { useI18n } from "@/lib/i18n";
 
 interface ConnectInfo {
   subscription_url: string;
@@ -22,6 +23,7 @@ function formatBytes(n: number): string {
 }
 
 export default function Connect() {
+  const { t } = useI18n();
   const [info, setInfo] = useState<ConnectInfo | null>(null);
   const [noSub, setNoSub] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,12 +56,10 @@ export default function Connect() {
   if (noSub)
     return (
       <div className="flex flex-col gap-4 items-center pt-16 text-center">
-        <p className="text-4xl">🔒</p>
-        <h1 className="text-lg font-semibold">Faol obuna yo'q</h1>
-        <p className="text-sm text-muted">VPN'ni ulash uchun avval tarif sotib oling.</p>
-        <Link href="/plans" className="btn-primary max-w-xs">
-          💎 Tariflarni ko'rish
-        </Link>
+        <div className="h-24 w-24 rounded-full glass-hi flex items-center justify-center text-4xl">🔒</div>
+        <h1 className="text-lg font-semibold">{t("no_sub_title")}</h1>
+        <p className="text-sm text-muted">{t("no_sub_desc")}</p>
+        <Link href="/plans" className="btn-primary max-w-xs">{t("view_plans")}</Link>
       </div>
     );
 
@@ -70,8 +70,8 @@ export default function Connect() {
           <span className="ring" />
           <div className="h-24 w-24 rounded-full orb flex items-center justify-center text-3xl shadow-glow">🚀</div>
         </div>
-        <h1 className="text-xl font-bold mt-4">VPN'ni ulash</h1>
-        <p className="text-xs text-muted mt-1">Obunangiz faol — ilovaga ulang</p>
+        <h1 className="text-xl font-bold mt-4">{t("connect_title")}</h1>
+        <p className="text-xs text-muted mt-1">{t("connect_sub")}</p>
       </div>
       {error && <div className="glass !border-danger/40 text-danger text-sm p-4">{error}</div>}
       {!info && !error && <div className="skeleton h-72" />}
@@ -80,7 +80,7 @@ export default function Connect() {
         <>
           <section className="glass p-5">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="font-semibold">📱 Sizning qurilmangiz</h2>
+              <h2 className="font-semibold">{t("your_device")}</h2>
               <div className="flex gap-1">
                 {PLATFORMS.map((p) => (
                   <button
@@ -96,8 +96,7 @@ export default function Connect() {
               </div>
             </div>
             <p className="text-xs text-muted mb-3">
-              {PLATFORM_LABEL[activePlatform]} uchun ilovani o'rnating, so'ng «Import» bosing
-              (yoki URL'ni nusxalab ilovaga qo'ying).
+              {PLATFORM_LABEL[activePlatform]} {t("device_hint")}
             </p>
             <div className="flex flex-col gap-2">
               {APPS[activePlatform].map((app) => (
@@ -112,13 +111,13 @@ export default function Connect() {
                     </p>
                   </div>
                   <button className="btn-ghost !py-1.5 !px-3 !w-auto text-xs" onClick={() => openExternal(app.url)}>
-                    O'rnatish
+                    {t("install")}
                   </button>
                   <button
                     className="btn-primary !py-1.5 !px-3 !w-auto text-xs"
                     onClick={() => doImport(app.importVia)}
                   >
-                    {app.importVia === "copy" ? "URL nusxa" : "Import"}
+                    {app.importVia === "copy" ? t("url_copy") : t("import")}
                   </button>
                 </div>
               ))}
@@ -126,28 +125,26 @@ export default function Connect() {
           </section>
 
           <section className="glass p-5">
-            <h2 className="font-semibold mb-2">1. Universal URL</h2>
-            <p className="text-xs text-muted mb-3">
-              Har qanday kliyentda ishlaydi: Happ, v2rayNG, Streisand, sing-box.
-            </p>
+            <h2 className="font-semibold mb-2">{t("universal_url")}</h2>
+            <p className="text-xs text-muted mb-3">{t("universal_desc")}</p>
             <div className="bg-black/40 rounded-xl p-3 text-xs break-all font-mono text-muted">
               {info.subscription_url}
             </div>
             <button className="btn-primary mt-3" onClick={copyUrl}>
-              {copied ? "✓ Nusxalandi" : "📋 URL'ni nusxalash"}
+              {copied ? t("copied") : t("copy_url")}
             </button>
           </section>
 
           <section className="glass p-5 flex flex-col items-center">
-            <h2 className="font-semibold mb-3 self-start">2. QR kod</h2>
+            <h2 className="font-semibold mb-3 self-start">{t("qr_title")}</h2>
             <div className="bg-white p-3 rounded-xl">
               <QRCodeSVG value={info.subscription_url} size={196} />
             </div>
-            <p className="text-xs text-muted mt-2">Kliyent ilovasida QR orqali import qiling</p>
+            <p className="text-xs text-muted mt-2">{t("qr_desc")}</p>
           </section>
 
           <section className="glass p-5">
-            <h2 className="font-semibold mb-3">3. Bir bosishda ochish</h2>
+            <h2 className="font-semibold mb-3">{t("one_tap")}</h2>
             <div className="grid grid-cols-2 gap-3">
               <button className="btn-ghost" onClick={() => openExternal(info.deep_links.happ)}>
                 Happ
@@ -161,11 +158,11 @@ export default function Connect() {
           {info.traffic && (
             <section className="glass p-4 flex justify-around text-center">
               <div>
-                <p className="text-xs text-muted">⬆️ Yuklangan</p>
+                <p className="text-xs text-muted">{t("uploaded")}</p>
                 <p className="font-semibold">{formatBytes(info.traffic.up)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted">⬇️ Yuklab olingan</p>
+                <p className="text-xs text-muted">{t("downloaded")}</p>
                 <p className="font-semibold">{formatBytes(info.traffic.down)}</p>
               </div>
             </section>

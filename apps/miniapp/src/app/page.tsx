@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { getTg, getTgUser, waitForInitData, type TgUser } from "@/lib/telegram";
+import { useI18n, LangSwitch } from "@/lib/i18n";
 
 interface Sub {
   status: string;
@@ -12,6 +13,7 @@ interface Sub {
 }
 
 export default function Home() {
+  const { t } = useI18n();
   const [sub, setSub] = useState<Sub | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<TgUser | null>(null);
@@ -45,12 +47,10 @@ export default function Home() {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-muted text-xs">Xush kelibsiz 👋</p>
-          <h1 className="font-semibold text-lg leading-tight truncate">{user?.first_name ?? "Mehmon"}</h1>
+          <p className="text-muted text-xs">{t("welcome")}</p>
+          <h1 className="font-semibold text-lg leading-tight truncate">{user?.first_name ?? t("guest")}</h1>
         </div>
-        <span className={`chip ${active ? "text-accent bg-accent/10" : "text-muted bg-white/5"}`}>
-          {active ? "◆ PREMIUM" : "FREE"}
-        </span>
+        <LangSwitch compact />
       </header>
 
       {error && <div className="glass !border-danger/40 text-danger text-sm p-4">{error}</div>}
@@ -62,11 +62,11 @@ export default function Home() {
         <section className="glass-hi p-5 relative overflow-hidden">
           <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/30 blur-3xl" />
           <div className="flex items-center justify-between relative">
-            <p className="text-muted text-xs uppercase tracking-wider">Obuna</p>
+            <p className="text-muted text-xs uppercase tracking-wider">{t("subscription")}</p>
             <span
               className={`chip ${active ? "text-accent bg-accent/10" : "text-danger bg-danger/10"}`}
             >
-              {active ? "● FAOL" : sub ? "● TUGAGAN" : "● YO'Q"}
+              {active ? t("active") : sub ? t("expired") : t("none")}
             </span>
           </div>
           {active && sub ? (
@@ -74,20 +74,18 @@ export default function Home() {
               <div>
                 <p className="text-3xl font-bold leading-none">
                   {daysLeft}
-                  <span className="text-base font-medium text-muted"> kun</span>
+                  <span className="text-base font-medium text-muted"> {t("days")}</span>
                 </p>
                 <p className="text-xs text-muted mt-1">{sub.plan.name}</p>
               </div>
               <p className="text-xs text-muted text-right">
-                {new Date(sub.expires_at).toLocaleDateString("uz-UZ")}
+                {new Date(sub.expires_at).toLocaleDateString()}
                 <br />
-                gacha
+                {t("until")}
               </p>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted relative">
-              Faol obuna yo'q — tarif tanlab VPN'ni bir daqiqada ulang.
-            </p>
+            <p className="mt-3 text-sm text-muted relative">{t("no_sub_home")}</p>
           )}
         </section>
       )}
@@ -104,29 +102,29 @@ export default function Home() {
           >
             <span className="text-4xl mb-1">{active ? "🚀" : "💎"}</span>
             <span className="font-bold text-lg leading-tight text-white drop-shadow">
-              {active ? "VPN'ni" : "Tarif"}
+              {active ? t("orb_connect_1") : t("orb_buy_1")}
               <br />
-              {active ? "ulash" : "olish"}
+              {active ? t("orb_connect_2") : t("orb_buy_2")}
             </span>
           </div>
         </Link>
-        <p className="text-muted text-xs mt-5">
-          {active ? "Ulanish uchun bosing" : "Boshlash uchun tarif tanlang"}
-        </p>
+        <p className="text-muted text-xs mt-5">{active ? t("hint_connect") : t("hint_choose")}</p>
       </section>
 
       {/* Quick stat cards */}
       <div className="grid grid-cols-2 gap-3">
         <div className="glass p-4">
-          <p className="text-muted text-[11px]">Tarmoq sifati</p>
+          <p className="text-muted text-[11px]">{t("net_quality")}</p>
           <p className="font-semibold mt-1 flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-accent shadow-glow-accent" />
-            {active ? "A'lo" : "—"}
+            {active ? t("excellent") : "—"}
           </p>
         </div>
         <div className="glass p-4">
-          <p className="text-muted text-[11px]">Qurilmalar</p>
-          <p className="font-semibold mt-1">{active && sub ? `${sub.plan.device_hint} tagacha` : "—"}</p>
+          <p className="text-muted text-[11px]">{t("devices")}</p>
+          <p className="font-semibold mt-1">
+            {active && sub ? `${sub.plan.device_hint} ${t("up_to")}` : "—"}
+          </p>
         </div>
       </div>
 
@@ -134,8 +132,8 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <span className="h-9 w-9 rounded-xl bg-secondary/15 flex items-center justify-center text-secondary">🌍</span>
           <div>
-            <p className="text-sm font-medium">Server lokatsiyalari</p>
-            <p className="text-xs text-muted">Barcha serverlarni ko'rish</p>
+            <p className="text-sm font-medium">{t("server_locations")}</p>
+            <p className="text-xs text-muted">{t("view_all_servers")}</p>
           </div>
         </div>
         <span className="text-muted">›</span>

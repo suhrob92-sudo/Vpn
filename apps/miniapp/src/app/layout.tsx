@@ -3,6 +3,7 @@ import { Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import { I18nProvider } from "@/lib/i18n";
 
 const sans = Space_Grotesk({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -24,8 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <div className="aurora" />
-        <main className="mx-auto max-w-md min-h-dvh px-4 pt-6 pb-32">{children}</main>
-        <BottomNav />
+        <I18nProvider>
+          <main className="mx-auto max-w-md min-h-dvh px-4 pt-6 pb-32">{children}</main>
+          <BottomNav />
+        </I18nProvider>
       </body>
     </html>
   );
