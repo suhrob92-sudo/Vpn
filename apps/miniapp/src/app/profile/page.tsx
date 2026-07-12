@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiPublic } from "@/lib/api";
 import { getTgUser } from "@/lib/telegram";
 import { useI18n, LangSwitch } from "@/lib/i18n";
 
@@ -19,6 +19,7 @@ export default function Profile() {
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
+  const [cardEnabled, setCardEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const user = typeof window !== "undefined" ? getTgUser() : null;
 
@@ -26,6 +27,9 @@ export default function Profile() {
     apiFetch<Sub | null>("/subscriptions/me").then(setSub).catch((e) => setError(e.message));
     apiFetch<{ invite_link: string | null }>("/users/me")
       .then((me) => setInviteLink(me.invite_link))
+      .catch(() => {});
+    apiPublic<{ card: boolean }>("/payments/methods")
+      .then((m) => setCardEnabled(m.card))
       .catch(() => {});
   }, []);
 
@@ -147,7 +151,7 @@ export default function Profile() {
       )}
 
       <div className="flex flex-col gap-3">
-        {active && (
+        {active && cardEnabled && (
           <button className="btn-primary" onClick={renew} disabled={renewing}>
             {renewing ? t("renewing") : t("renew")}
           </button>

@@ -42,6 +42,19 @@ def get_provider(name: str) -> PaymentProvider:
     raise ValueError(f"unknown payment provider: {name}")
 
 
+def provider_configured(name: str) -> bool:
+    """True only when the provider has real credentials — lets the API return a
+    clean 400 instead of a provider error when card payments aren't set up yet."""
+    from app.core.config import get_settings
+
+    s = get_settings()
+    if name == "yookassa":
+        return bool(s.yookassa_shop_id and s.yookassa_secret_key)
+    if name == "cryptobot":
+        return bool(s.cryptobot_api_token)
+    return False
+
+
 async def create_payment(db: AsyncSession, user: User, plan: Plan, provider_name: str) -> Payment:
     provider = get_provider(provider_name)
     payment = Payment(

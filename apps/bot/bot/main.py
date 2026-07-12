@@ -18,16 +18,38 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_COMMANDS = [
-    BotCommand(command="start", description="Boshlash / asosiy menyu"),
-    BotCommand(command="subscription", description="Obuna holati"),
-    BotCommand(command="profile", description="Profil"),
-    BotCommand(command="servers", description="Serverlar ro'yxati"),
-    BotCommand(command="invite", description="Do'st taklif qilish (bonus)"),
-    BotCommand(command="stars", description="Stars bilan to'lash"),
-    BotCommand(command="help", description="Yordam"),
-    BotCommand(command="support", description="Qo'llab-quvvatlash"),
-]
+BOT_COMMANDS = {
+    "uz": [
+        BotCommand(command="start", description="Boshlash / asosiy menyu"),
+        BotCommand(command="subscription", description="Obuna holati"),
+        BotCommand(command="profile", description="Profil"),
+        BotCommand(command="servers", description="Serverlar ro'yxati"),
+        BotCommand(command="invite", description="Do'st taklif qilish (bonus)"),
+        BotCommand(command="stars", description="Stars bilan to'lash"),
+        BotCommand(command="help", description="Yordam"),
+        BotCommand(command="support", description="Qo'llab-quvvatlash"),
+    ],
+    "ru": [
+        BotCommand(command="start", description="Старт / главное меню"),
+        BotCommand(command="subscription", description="Статус подписки"),
+        BotCommand(command="profile", description="Профиль"),
+        BotCommand(command="servers", description="Список серверов"),
+        BotCommand(command="invite", description="Пригласить друга (бонус)"),
+        BotCommand(command="stars", description="Оплата через Stars"),
+        BotCommand(command="help", description="Помощь"),
+        BotCommand(command="support", description="Поддержка"),
+    ],
+    "en": [
+        BotCommand(command="start", description="Start / main menu"),
+        BotCommand(command="subscription", description="Subscription status"),
+        BotCommand(command="profile", description="Profile"),
+        BotCommand(command="servers", description="Server list"),
+        BotCommand(command="invite", description="Invite a friend (bonus)"),
+        BotCommand(command="stars", description="Pay with Stars"),
+        BotCommand(command="help", description="Help"),
+        BotCommand(command="support", description="Support"),
+    ],
+}
 
 
 async def main() -> None:
@@ -40,7 +62,10 @@ async def main() -> None:
     dp.include_router(stars.router)   # payment updates must win over generic text handlers
     dp.include_router(commands.router)
 
-    await bot.set_my_commands(BOT_COMMANDS)
+    # Uzbek is the default; ru/en users see localized command hints.
+    await bot.set_my_commands(BOT_COMMANDS["uz"])
+    await bot.set_my_commands(BOT_COMMANDS["ru"], language_code="ru")
+    await bot.set_my_commands(BOT_COMMANDS["en"], language_code="en")
     logger.info("bot started (polling)")
     await dp.start_polling(bot)
 

@@ -29,18 +29,47 @@ from app.services.vpn_manager import revoke_access
 
 logger = logging.getLogger(__name__)
 
-EXPIRED_MESSAGE = (
-    "⏳ <b>Obunangiz muddati tugadi</b>\n\n"
-    "VPN ulanishingiz to'xtatildi. Xizmatdan yana foydalanish uchun "
-    "obunani uzaytiring: bot menyusidan «💎 Tariflar» bo'limini oching."
-)
+EXPIRED_MESSAGE = {
+    "uz": (
+        "⏳ <b>Obunangiz muddati tugadi</b>\n\n"
+        "VPN ulanishingiz to'xtatildi. Xizmatdan yana foydalanish uchun "
+        "obunani uzaytiring: bot menyusidan «💎 Tariflar» bo'limini oching."
+    ),
+    "ru": (
+        "⏳ <b>Ваша подписка истекла</b>\n\n"
+        "VPN-подключение отключено. Чтобы продолжить пользоваться сервисом, "
+        "продлите подписку: откройте «💎 Тарифы» в меню бота."
+    ),
+    "en": (
+        "⏳ <b>Your subscription has expired</b>\n\n"
+        "Your VPN connection has been stopped. To keep using the service, "
+        "renew your plan: open “💎 Plans” from the bot menu."
+    ),
+}
 
-REMINDER_MESSAGE = (
-    "🔔 <b>Eslatma:</b> obunangiz tugashiga <b>{days} kun</b> qoldi "
-    "({date} gacha).\n\n"
-    "Uzluksiz ishlashi uchun obunani hozir uzaytiring — "
-    "profil bo'limidagi «♻️ Obunani uzaytirish» tugmasi orqali."
-)
+REMINDER_MESSAGE = {
+    "uz": (
+        "🔔 <b>Eslatma:</b> obunangiz tugashiga <b>{days} kun</b> qoldi "
+        "({date} gacha).\n\nUzluksiz ishlashi uchun obunani hozir uzaytiring."
+    ),
+    "ru": (
+        "🔔 <b>Напоминание:</b> до конца подписки осталось <b>{days} дней</b> "
+        "(до {date}).\n\nПродлите подписку сейчас, чтобы не было перерыва."
+    ),
+    "en": (
+        "🔔 <b>Reminder:</b> <b>{days} days</b> left on your subscription "
+        "(until {date}).\n\nRenew now to avoid any interruption."
+    ),
+}
+
+
+def _lang(user: User) -> str:
+    c = (user.language_code or "").lower()
+    if c.startswith("ru"):
+        return "ru"
+    if c.startswith("en"):
+        return "en"
+    return "uz"
 
 
 async def check_expired_subscriptions(ctx: dict) -> int:
@@ -76,7 +105,7 @@ async def check_expired_subscriptions(ctx: dict) -> int:
 
                 user = await db.get(User, sub.user_id)
                 if user:
-                    await send_message(user.telegram_id, EXPIRED_MESSAGE)
+                    await send_message(user.telegram_id, EXPIRED_MESSAGE[_lang(user)])
             except Exception as exc:  # noqa: BLE001 — keep sweeping other subs
                 await db.rollback()
                 logger.exception("expiry sweep failed for subscription %s", sub.id)
@@ -112,7 +141,9 @@ async def send_expiry_reminders(ctx: dict) -> int:
             days_left = max(1, (expires - now).days or 1)
             delivered = await send_message(
                 user.telegram_id,
-                REMINDER_MESSAGE.format(days=days_left, date=expires.strftime("%d.%m.%Y")),
+                REMINDER_MESSAGE[_lang(user)].format(
+                    days=days_left, date=expires.strftime("%d.%m.%Y")
+                ),
             )
             if delivered:
                 sub.reminder_sent_at = now

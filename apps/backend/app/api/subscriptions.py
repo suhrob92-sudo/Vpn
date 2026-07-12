@@ -9,7 +9,7 @@ from app.core.ratelimit import rate_limit
 from app.models import Plan, Subscription, SubscriptionStatus, User
 from app.schemas.billing import PaymentOut, SubscriptionOut
 from app.schemas.common import ok
-from app.services.payments import create_payment
+from app.services.payments import create_payment, provider_configured
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
@@ -54,6 +54,12 @@ async def renew(user: User = Depends(get_current_user), db: AsyncSession = Depen
             status_code=status.HTTP_409_CONFLICT,
             detail="Current plan is unavailable — choose a new plan",
         )
-    payment = await create_payment(db, user, plan, get_settings().default_payment_provider)
+    provider = get_settings().default_payment_provider
+    if not provider_configured(provider):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Karta to'lovi hozircha ulanmagan — Stars yoki balansdan foydalaning",
+        )
+    payment = await create_payment(db, user, plan, provider)
     await db.commit()
     return ok(PaymentOut.model_validate(payment).model_dump(mode="json"))

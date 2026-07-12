@@ -25,6 +25,7 @@ from app.services.payments import (
     handle_stars_payment,
     handle_yookassa_webhook,
     is_trusted_ip,
+    provider_configured,
 )
 
 # Providers whose invoices can be created from the Mini App (card/crypto with a
@@ -35,22 +36,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 
-def _provider_configured(provider: str) -> bool:
-    s = get_settings()
-    if provider == "yookassa":
-        return bool(s.yookassa_shop_id and s.yookassa_secret_key)
-    if provider == "cryptobot":
-        return bool(s.cryptobot_api_token)
-    return False
-
-
 @router.get("/methods")
 async def payment_methods():
     """Which payment methods the Mini App may offer (public, no auth)."""
     s = get_settings()
     return ok(
         {
-            "card": _provider_configured(s.default_payment_provider),
+            "card": provider_configured(s.default_payment_provider),
             "stars": bool(s.bot_token),
         }
     )
@@ -71,7 +63,7 @@ async def create(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Provider must be one of {sorted(_API_PROVIDERS)}; Stars go through the bot",
         )
-    if not _provider_configured(provider):
+    if not provider_configured(provider):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Karta to'lovi hozircha ulanmagan — Stars yoki balansdan foydalaning",

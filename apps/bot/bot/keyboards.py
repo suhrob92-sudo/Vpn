@@ -7,9 +7,10 @@ from aiogram.types import (
 )
 
 from bot.config import get_settings
+from bot.i18n import Lang, t
 
 
-def main_menu() -> ReplyKeyboardMarkup:
+def main_menu(lang: Lang) -> ReplyKeyboardMarkup:
     # Plain text buttons only: reply-keyboard web_app buttons launch the Mini App
     # WITHOUT initData on some Telegram Android builds, breaking auth. The text
     # handlers reply with an inline web_app button instead, which (like the bot
@@ -17,20 +18,20 @@ def main_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         resize_keyboard=True,
         keyboard=[
-            [KeyboardButton(text="🚀 VPN'ni ulash")],
+            [KeyboardButton(text=t(lang, "btn_connect"))],
             [
-                KeyboardButton(text="💎 Tariflar"),
-                KeyboardButton(text="👤 Profil"),
+                KeyboardButton(text=t(lang, "btn_plans")),
+                KeyboardButton(text=t(lang, "btn_profile")),
             ],
             [
-                KeyboardButton(text="🌍 Serverlar"),
-                KeyboardButton(text="🆘 Yordam"),
+                KeyboardButton(text=t(lang, "btn_servers")),
+                KeyboardButton(text=t(lang, "btn_help")),
             ],
         ],
     )
 
 
-def open_app_button(text: str = "🚀 Mini App'ni ochish", path: str = "") -> InlineKeyboardMarkup:
+def open_app_button(text: str, path: str = "") -> InlineKeyboardMarkup:
     miniapp = get_settings().miniapp_url
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -39,12 +40,12 @@ def open_app_button(text: str = "🚀 Mini App'ni ochish", path: str = "") -> In
     )
 
 
-def stars_plans_keyboard(plans: list[dict]) -> InlineKeyboardMarkup:
+def stars_plans_keyboard(plans: list[dict], lang: Lang) -> InlineKeyboardMarkup:
     """Inline buttons for plans payable with Telegram Stars (price_stars > 0)."""
     rows = [
         [
             InlineKeyboardButton(
-                text=f"⭐ {p['name']} — {int(p['price_stars'])} Stars",
+                text=t(lang, "stars_plan_btn", name=p["name"], stars=int(p["price_stars"])),
                 callback_data=f"stars:{p['id']}",
             )
         ]
