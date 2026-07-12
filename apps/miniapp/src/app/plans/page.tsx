@@ -85,40 +85,48 @@ export default function Plans() {
     }
   }
 
+  const cur = (c: string) => (c === "RUB" ? "₽" : c);
+
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">💎 Tariflar</h1>
-      <p className="text-sm text-muted -mt-2">
-        {methods.card
-          ? "To'lovni bank kartasi (Sber, Mir, СБП) yoki Telegram Stars orqali amalga oshiring."
-          : "To'lovni Telegram Stars orqali amalga oshiring."}{" "}
-        To'lov tasdiqlangach obuna avtomatik faollashadi.
-      </p>
+    <div className="flex flex-col gap-4 animate-fade-up">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Tariflar</h1>
+        <p className="text-sm text-muted mt-1">
+          {methods.card ? "Karta (Sber, Mir, СБП) yoki Telegram Stars." : "Telegram Stars orqali."}{" "}
+          To'lovdan so'ng obuna avtomatik faollashadi.
+        </p>
+      </div>
 
       {balance > 0 && (
-        <div className="card flex items-center justify-between">
-          <p className="text-sm text-muted">💰 Balansingiz</p>
-          <p className="font-bold">{balance} ₽</p>
+        <div className="glass p-4 flex items-center justify-between">
+          <p className="text-sm text-muted flex items-center gap-2">
+            <span className="h-8 w-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent">💰</span>
+            Balansingiz
+          </p>
+          <p className="font-bold text-lg">{balance} ₽</p>
         </div>
       )}
 
-      {error && <div className="card border-danger/40 text-danger text-sm">{error}</div>}
+      {error && <div className="glass !border-danger/40 text-danger text-sm p-4">{error}</div>}
 
       {!plans && !error && (
         <>
-          <div className="skeleton h-32" />
-          <div className="skeleton h-32" />
+          <div className="skeleton h-40" />
+          <div className="skeleton h-40" />
         </>
       )}
 
-      {plans?.map((plan) => (
+      {plans?.map((plan, i) => (
         <div
           key={plan.id}
-          className={`card relative ${plan.is_popular ? "border-primary/60 shadow-glow" : ""}`}
+          style={{ animationDelay: `${i * 60}ms` }}
+          className={`relative p-5 animate-fade-up ${
+            plan.is_popular ? "glass-hi glow-border shadow-glow" : "glass"
+          }`}
         >
           {plan.is_popular && (
-            <span className="absolute -top-2.5 right-4 text-[11px] font-bold bg-gradient-to-r from-primary to-secondary px-2.5 py-0.5 rounded-full">
-              ENG MASHHUR
+            <span className="absolute -top-2.5 left-5 chip text-white bg-gradient-to-r from-primary to-secondary shadow-glow">
+              ★ ENG MASHHUR
             </span>
           )}
           <div className="flex items-start justify-between">
@@ -126,20 +134,33 @@ export default function Plans() {
               <h2 className="font-semibold text-lg">{plan.name}</h2>
               <p className="text-sm text-muted">{plan.description}</p>
             </div>
-            <div className="text-right">
-              <p className="font-bold text-lg">
-                {parseFloat(plan.price)}{" "}
-                <span className="text-sm">{plan.currency === "RUB" ? "₽" : plan.currency}</span>
+            <div className="text-right shrink-0">
+              <p className="font-bold text-2xl leading-none bg-gradient-to-r from-white to-muted bg-clip-text text-transparent">
+                {parseFloat(plan.price)}
+                <span className="text-base"> {cur(plan.currency)}</span>
               </p>
               {plan.discount_percent > 0 && (
-                <p className="text-xs text-success">-{plan.discount_percent}% chegirma</p>
+                <span className="chip text-accent bg-accent/10 mt-1 inline-block">
+                  -{plan.discount_percent}%
+                </span>
               )}
             </div>
           </div>
-          <ul className="mt-3 text-sm text-muted space-y-1">
-            <li>⏳ {plan.duration_days} kun</li>
-            <li>📶 Trafik: {plan.traffic_limit_gb > 0 ? `${plan.traffic_limit_gb} GB` : "cheksiz"}</li>
-            <li>📱 {plan.device_hint} qurilmagacha tavsiya etiladi</li>
+          <ul className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <li className="rounded-2xl bg-white/[0.04] py-2">
+              <p className="text-sm font-semibold">{plan.duration_days}</p>
+              <p className="text-[10px] text-muted">kun</p>
+            </li>
+            <li className="rounded-2xl bg-white/[0.04] py-2">
+              <p className="text-sm font-semibold">
+                {plan.traffic_limit_gb > 0 ? `${plan.traffic_limit_gb}GB` : "∞"}
+              </p>
+              <p className="text-[10px] text-muted">trafik</p>
+            </li>
+            <li className="rounded-2xl bg-white/[0.04] py-2">
+              <p className="text-sm font-semibold">{plan.device_hint}</p>
+              <p className="text-[10px] text-muted">qurilma</p>
+            </li>
           </ul>
           <div className="mt-4 flex flex-col gap-2">
             {methods.card && (
@@ -150,7 +171,7 @@ export default function Plans() {
               >
                 {buying === `${plan.id}:card`
                   ? "Ochilmoqda…"
-                  : `💳 Karta bilan · ${parseFloat(plan.price)} ${plan.currency === "RUB" ? "₽" : plan.currency}`}
+                  : `💳 Karta · ${parseFloat(plan.price)} ${cur(plan.currency)}`}
               </button>
             )}
             {plan.price_stars > 0 && (
@@ -159,9 +180,7 @@ export default function Plans() {
                 disabled={buying === `${plan.id}:stars`}
                 onClick={() => buyStars(plan)}
               >
-                {buying === `${plan.id}:stars`
-                  ? "Ochilmoqda…"
-                  : `⭐ Telegram Stars · ${plan.price_stars}`}
+                {buying === `${plan.id}:stars` ? "Ochilmoqda…" : `⭐ Stars · ${plan.price_stars}`}
               </button>
             )}
             {balance >= parseFloat(plan.price) && (

@@ -32,35 +32,46 @@ export default function PaymentSuccess() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4 pt-16 text-center">
+    <div className="flex flex-col items-center gap-5 pt-20 text-center animate-fade-up">
       {state === "waiting" && (
         <>
-          <div className="h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <h1 className="text-lg font-semibold">To'lov tasdiqlanmoqda…</h1>
-          <p className="text-sm text-muted">
-            Odatda bu bir necha soniya davom etadi. Obuna to'lov tasdiqlangach avtomatik faollashadi.
+          <div className="relative h-28 w-28">
+            <span className="ring" />
+            <div className="h-28 w-28 rounded-full orb-idle flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full border-[3px] border-secondary border-t-transparent animate-spin" />
+            </div>
+          </div>
+          <h1 className="text-xl font-bold">To'lov tasdiqlanmoqda…</h1>
+          <p className="text-sm text-muted max-w-xs">
+            Odatda bir necha soniya. Obuna tasdiqlangach avtomatik faollashadi.
           </p>
         </>
       )}
       {state === "active" && (
         <>
-          <p className="text-5xl">✅</p>
-          <h1 className="text-lg font-semibold">Obuna faollashtirildi!</h1>
-          <Link href="/connect" className="btn-primary max-w-xs">
-            🚀 VPN'ni ulash
-          </Link>
+          <div className="relative h-32 w-32 animate-float">
+            <span className="ring" />
+            <span className="ring ring-2" />
+            <div className="h-32 w-32 rounded-full orb flex items-center justify-center text-5xl shadow-glow">
+              🛡️
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold">Obuna faollashtirildi!</h1>
+          <p className="text-sm text-muted max-w-xs">Endi VPN'ni istalgan qurilmaga ulashingiz mumkin.</p>
+          <div className="flex flex-col gap-3 w-full max-w-xs mt-2">
+            <Link href="/connect" className="btn-primary">🚀 VPN'ni ulash</Link>
+            <Link href="/" className="btn-ghost">Asosiyga qaytish</Link>
+          </div>
         </>
       )}
       {state === "slow" && (
         <>
-          <p className="text-5xl">⏳</p>
-          <h1 className="text-lg font-semibold">To'lov hali tasdiqlanmadi</h1>
-          <p className="text-sm text-muted">
+          <div className="h-28 w-28 rounded-full glass-hi flex items-center justify-center text-5xl">⏳</div>
+          <h1 className="text-xl font-bold">To'lov hali tasdiqlanmadi</h1>
+          <p className="text-sm text-muted max-w-xs">
             Tarmoq tasdiqlashi kechikishi mumkin. Bir necha daqiqadan so'ng profilni tekshiring.
           </p>
-          <Link href="/profile" className="btn-ghost max-w-xs">
-            👤 Profilga o'tish
-          </Link>
+          <Link href="/profile" className="btn-ghost max-w-xs">👤 Profilga o'tish</Link>
         </>
       )}
     </div>

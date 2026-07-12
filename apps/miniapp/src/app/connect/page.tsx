@@ -64,14 +64,21 @@ export default function Connect() {
     );
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">🚀 VPN'ni ulash</h1>
-      {error && <div className="card border-danger/40 text-danger text-sm">{error}</div>}
+    <div className="flex flex-col gap-4 animate-fade-up">
+      <div className="flex flex-col items-center py-2">
+        <div className="relative h-24 w-24 animate-float">
+          <span className="ring" />
+          <div className="h-24 w-24 rounded-full orb flex items-center justify-center text-3xl shadow-glow">🚀</div>
+        </div>
+        <h1 className="text-xl font-bold mt-4">VPN'ni ulash</h1>
+        <p className="text-xs text-muted mt-1">Obunangiz faol — ilovaga ulang</p>
+      </div>
+      {error && <div className="glass !border-danger/40 text-danger text-sm p-4">{error}</div>}
       {!info && !error && <div className="skeleton h-72" />}
 
       {info && (
         <>
-          <section className="card">
+          <section className="glass p-5">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-semibold">📱 Sizning qurilmangiz</h2>
               <div className="flex gap-1">
@@ -118,7 +125,7 @@ export default function Connect() {
             </div>
           </section>
 
-          <section className="card">
+          <section className="glass p-5">
             <h2 className="font-semibold mb-2">1. Universal URL</h2>
             <p className="text-xs text-muted mb-3">
               Har qanday kliyentda ishlaydi: Happ, v2rayNG, Streisand, sing-box.
@@ -131,7 +138,7 @@ export default function Connect() {
             </button>
           </section>
 
-          <section className="card flex flex-col items-center">
+          <section className="glass p-5 flex flex-col items-center">
             <h2 className="font-semibold mb-3 self-start">2. QR kod</h2>
             <div className="bg-white p-3 rounded-xl">
               <QRCodeSVG value={info.subscription_url} size={196} />
@@ -139,7 +146,7 @@ export default function Connect() {
             <p className="text-xs text-muted mt-2">Kliyent ilovasida QR orqali import qiling</p>
           </section>
 
-          <section className="card">
+          <section className="glass p-5">
             <h2 className="font-semibold mb-3">3. Bir bosishda ochish</h2>
             <div className="grid grid-cols-2 gap-3">
               <button className="btn-ghost" onClick={() => openExternal(info.deep_links.happ)}>
@@ -152,7 +159,7 @@ export default function Connect() {
           </section>
 
           {info.traffic && (
-            <section className="card flex justify-around text-center">
+            <section className="glass p-4 flex justify-around text-center">
               <div>
                 <p className="text-xs text-muted">⬆️ Yuklangan</p>
                 <p className="font-semibold">{formatBytes(info.traffic.up)}</p>

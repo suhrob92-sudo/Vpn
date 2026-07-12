@@ -55,68 +55,83 @@ export default function Profile() {
     : 0;
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">👤 Profil</h1>
+    <div className="flex flex-col gap-4 animate-fade-up">
+      <h1 className="text-2xl font-bold tracking-tight">Profil</h1>
 
-      <section className="card flex items-center gap-4">
-        <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xl font-bold">
-          {user?.first_name?.[0] ?? "?"}
+      <section className="glass-hi p-5 flex items-center gap-4 relative overflow-hidden">
+        <div className="absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-secondary/25 blur-3xl" />
+        <div className="relative h-16 w-16 shrink-0">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-secondary blur-[6px] opacity-70" />
+          {user?.photo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.photo_url} alt="" className="relative h-16 w-16 rounded-full object-cover ring-1 ring-white/15" />
+          ) : (
+            <div className="relative h-16 w-16 rounded-full bg-surface flex items-center justify-center text-2xl font-bold ring-1 ring-white/15">
+              {user?.first_name?.[0] ?? "?"}
+            </div>
+          )}
         </div>
-        <div>
-          <p className="font-semibold">
+        <div className="relative min-w-0">
+          <p className="font-semibold text-lg truncate">
             {user?.first_name} {user?.last_name ?? ""}
           </p>
           {user?.username && <p className="text-sm text-muted">@{user.username}</p>}
-          <p className="text-xs text-muted">ID: {user?.id}</p>
+          <span className={`chip mt-1 inline-block ${active ? "text-accent bg-accent/10" : "text-muted bg-white/5"}`}>
+            {active ? "◆ PREMIUM" : "FREE"}
+          </span>
         </div>
       </section>
 
-      {error && <div className="card border-danger/40 text-danger text-sm">{error}</div>}
+      {error && <div className="glass !border-danger/40 text-danger text-sm p-4">{error}</div>}
       {sub === undefined && !error && <div className="skeleton h-36" />}
 
-      {sub !== undefined && (
-        <section className="card">
-          <h2 className="font-semibold mb-2">Obuna</h2>
-          {sub && active ? (
-            <div className="text-sm text-muted space-y-1">
-              <p>
-                Tarif: <span className="text-txt">{sub.plan.name}</span>
-              </p>
-              <p>
-                Holat: <span className="text-success font-medium">FAOL</span>
-              </p>
-              <p>
-                Boshlangan: <span className="text-txt">{new Date(sub.started_at).toLocaleDateString("uz-UZ")}</span>
-              </p>
-              <p>
-                Tugaydi:{" "}
-                <span className="text-txt">
-                  {new Date(sub.expires_at).toLocaleDateString("uz-UZ")} ({daysLeft} kun qoldi)
-                </span>
-              </p>
-              <p>
-                Trafik limiti:{" "}
-                <span className="text-txt">
-                  {sub.plan.traffic_limit_gb > 0 ? `${sub.plan.traffic_limit_gb} GB` : "cheksiz"}
-                </span>
-              </p>
-              <p>
-                Qurilmalar: <span className="text-txt">{sub.plan.device_hint} tagacha tavsiya etiladi</span>
+      {sub !== undefined && active && sub && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass p-4">
+              <p className="text-muted text-[11px]">Qolgan</p>
+              <p className="text-2xl font-bold mt-1">
+                {daysLeft}
+                <span className="text-sm font-medium text-muted"> kun</span>
               </p>
             </div>
-          ) : (
-            <p className="text-sm text-muted">Faol obuna yo'q.</p>
-          )}
-        </section>
+            <div className="glass p-4">
+              <p className="text-muted text-[11px]">Tarif</p>
+              <p className="text-lg font-semibold mt-1 truncate">{sub.plan.name}</p>
+            </div>
+            <div className="glass p-4">
+              <p className="text-muted text-[11px]">Trafik</p>
+              <p className="text-lg font-semibold mt-1">
+                {sub.plan.traffic_limit_gb > 0 ? `${sub.plan.traffic_limit_gb} GB` : "Cheksiz"}
+              </p>
+            </div>
+            <div className="glass p-4">
+              <p className="text-muted text-[11px]">Qurilmalar</p>
+              <p className="text-lg font-semibold mt-1">{sub.plan.device_hint} tagacha</p>
+            </div>
+          </div>
+          <div className="glass p-4 flex items-center justify-between text-sm">
+            <span className="text-muted">Amal qiladi</span>
+            <span className="font-medium">
+              {new Date(sub.started_at).toLocaleDateString("uz-UZ")} — {new Date(sub.expires_at).toLocaleDateString("uz-UZ")}
+            </span>
+          </div>
+        </>
+      )}
+      {sub !== undefined && !active && (
+        <div className="glass p-4 text-sm text-muted">Faol obuna yo'q.</div>
       )}
 
       {inviteLink && (
-        <section className="card">
-          <h2 className="font-semibold mb-1">🎁 Do'stlarni taklif qiling</h2>
+        <section className="glass p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center">🎁</span>
+            <h2 className="font-semibold">Do'stlarni taklif qiling</h2>
+          </div>
           <p className="text-xs text-muted mb-3">
-            Do'stingiz birinchi obunasini sotib olsa, sizga bonus kunlar qo'shiladi.
+            Do'stingiz birinchi obunasini sotib olsa — sizga bonus kunlar.
           </p>
-          <div className="bg-black/40 rounded-xl p-3 text-xs break-all font-mono text-muted">
+          <div className="rounded-2xl bg-black/30 border border-white/5 p-3 text-xs break-all font-mono text-muted">
             {inviteLink}
           </div>
           <button className="btn-ghost mt-3" onClick={copyInvite}>
@@ -131,14 +146,8 @@ export default function Profile() {
             {renewing ? "Invoice yaratilmoqda…" : "♻️ Obunani uzaytirish"}
           </button>
         )}
-        <Link href="/connect" className="btn-ghost">
-          🚀 VPN'ni qayta ulash
-        </Link>
-        {!active && (
-          <Link href="/plans" className="btn-primary">
-            💎 Tarif sotib olish
-          </Link>
-        )}
+        <Link href="/connect" className="btn-ghost">🚀 VPN'ni qayta ulash</Link>
+        {!active && <Link href="/plans" className="btn-primary">💎 Tarif sotib olish</Link>}
       </div>
     </div>
   );
