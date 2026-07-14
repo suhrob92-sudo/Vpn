@@ -1,0 +1,35 @@
+# Production reverse proxy. {$DOMAIN} comes from the environment.
+{$DOMAIN} {
+	encode gzip
+
+	# API (prefix stripped — backend routes live at /)
+	handle_path /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# Universal subscription endpoint (path preserved)
+	handle /sub/* {
+		reverse_proxy backend:8000
+	}
+
+	# Telegram Mini App (Next.js basePath /app)
+	handle /app* {
+		reverse_proxy miniapp:3000
+	}
+
+	# Admin panel (Next.js basePath /admin)
+	handle /admin* {
+		reverse_proxy admin:3000
+	}
+
+	handle {
+		redir / /app 302
+	}
+
+	# Note: no X-Frame-Options — Telegram Web embeds the Mini App in an iframe.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+	}
+}
