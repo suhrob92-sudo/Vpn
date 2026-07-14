@@ -55,6 +55,23 @@ async def get_plans() -> list[dict]:
     return await _post("/internal/bot/plans", {}) or []
 
 
+async def get_connect(telegram_id: int) -> dict | None:
+    return await _post("/internal/bot/connect", {"telegram_id": telegram_id})
+
+
+async def buy_from_balance(telegram_id: int, plan_id: int) -> dict:
+    result = await _post(
+        "/internal/bot/buy-balance", {"telegram_id": telegram_id, "plan_id": plan_id}
+    )
+    if result is None:
+        raise BackendError("buy-balance failed")
+    return result
+
+
+async def set_language(telegram_id: int, lang: str) -> None:
+    await _post("/internal/bot/set-language", {"telegram_id": telegram_id, "lang": lang})
+
+
 async def report_stars_payment(
     telegram_id: int, plan_id: int, charge_id: str, amount: int
 ) -> None:

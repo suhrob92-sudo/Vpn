@@ -97,6 +97,33 @@ TR: dict[Lang, dict[str, str]] = {
             "⚠️ To'lov qabul qilindi, lekin faollashtirishda xatolik yuz berdi. "
             "Bir necha daqiqada avtomatik hal bo'ladi; bo'lmasa yordamga yozing."
         ),
+        # inline navigation
+        "menu_title": (
+            "🛡 <b>VEYL VPN</b>\n\n"
+            "Quyidagi menyudan kerakli bo'limni tanlang 👇"
+        ),
+        "m_lang": "🌐 Til",
+        "back": "⬅️ Orqaga",
+        "lang_choose": "🌐 Tilni tanlang:",
+        "lang_saved": "✅ Til o'zgartirildi",
+        "connect_ready": (
+            "🚀 <b>VPN'ni ulash</b>\n\n"
+            "1️⃣ Quyidagi URL'ni nusxalang (ustiga bosib turing)\n"
+            "2️⃣ Happ yoki v2rayNG ilovasini o'rnating\n"
+            "3️⃣ Ilovada «Import» qiling yoki pastdagi QR kodni skanerlang\n\n"
+            "🔗 <b>Subscription URL:</b>\n<code>{url}</code>"
+        ),
+        "connect_qr_caption": "📷 QR kod — kliyent ilovasida skanerlang",
+        "install_happ": "📲 Happ o'rnatish",
+        "install_v2rayng": "📲 v2rayNG o'rnatish",
+        "connect_no_sub": "❌ Faol obuna yo'q. Avval «💎 Tariflar» dan tarif oling.",
+        "plans_pick": "💎 <b>Tarifni tanlang:</b>",
+        "plan_card_title": "💎 <b>{name}</b>\n{desc}\n\n⏳ {days} kun · 📱 {devices} qurilma\n\n💳 To'lov usulini tanlang:",
+        "pay_stars_btn": "⭐ Stars — {stars}",
+        "pay_balance_btn": "💰 Balansdan — {price} ₽",
+        "balance_paid": "✅ <b>To'landi!</b>\n\n«{plan}» faollashtirildi. «🚀 VPN'ni ulash» orqali ulaning.",
+        "balance_insufficient": "❌ Balansingiz yetarli emas. ⭐ Stars bilan to'lang yoki balansni to'ldiring.",
+        "balance_error": "⚠️ To'lovda xatolik. Keyinroq urinib ko'ring.",
     },
     "ru": {
         "service_down": "⚠️ Сервис временно недоступен. Попробуйте чуть позже.",
@@ -179,6 +206,31 @@ TR: dict[Lang, dict[str, str]] = {
             "⚠️ Оплата принята, но при активации произошла ошибка. "
             "Обычно решается автоматически за пару минут; если нет — напишите в поддержку."
         ),
+        "menu_title": (
+            "🛡 <b>VEYL VPN</b>\n\nВыберите нужный раздел в меню ниже 👇"
+        ),
+        "m_lang": "🌐 Язык",
+        "back": "⬅️ Назад",
+        "lang_choose": "🌐 Выберите язык:",
+        "lang_saved": "✅ Язык изменён",
+        "connect_ready": (
+            "🚀 <b>Подключить VPN</b>\n\n"
+            "1️⃣ Скопируйте URL ниже (зажмите его)\n"
+            "2️⃣ Установите приложение Happ или v2rayNG\n"
+            "3️⃣ Сделайте «Импорт» в приложении или отсканируйте QR-код ниже\n\n"
+            "🔗 <b>Subscription URL:</b>\n<code>{url}</code>"
+        ),
+        "connect_qr_caption": "📷 QR-код — отсканируйте в клиентском приложении",
+        "install_happ": "📲 Установить Happ",
+        "install_v2rayng": "📲 Установить v2rayNG",
+        "connect_no_sub": "❌ Нет активной подписки. Сначала купите тариф в «💎 Тарифы».",
+        "plans_pick": "💎 <b>Выберите тариф:</b>",
+        "plan_card_title": "💎 <b>{name}</b>\n{desc}\n\n⏳ {days} дней · 📱 {devices} устройства\n\n💳 Выберите способ оплаты:",
+        "pay_stars_btn": "⭐ Stars — {stars}",
+        "pay_balance_btn": "💰 С баланса — {price} ₽",
+        "balance_paid": "✅ <b>Оплачено!</b>\n\n«{plan}» активирован. Подключитесь через «🚀 Подключить VPN».",
+        "balance_insufficient": "❌ Недостаточно средств на балансе. Оплатите через ⭐ Stars или пополните баланс.",
+        "balance_error": "⚠️ Ошибка оплаты. Попробуйте позже.",
     },
     "en": {
         "service_down": "⚠️ Service is temporarily unavailable. Please try again shortly.",
@@ -261,6 +313,31 @@ TR: dict[Lang, dict[str, str]] = {
             "⚠️ Payment received, but activation failed. "
             "It usually resolves automatically within a few minutes; otherwise contact support."
         ),
+        "menu_title": (
+            "🛡 <b>VEYL VPN</b>\n\nPick a section from the menu below 👇"
+        ),
+        "m_lang": "🌐 Language",
+        "back": "⬅️ Back",
+        "lang_choose": "🌐 Choose your language:",
+        "lang_saved": "✅ Language changed",
+        "connect_ready": (
+            "🚀 <b>Connect VPN</b>\n\n"
+            "1️⃣ Copy the URL below (long-press it)\n"
+            "2️⃣ Install the Happ or v2rayNG app\n"
+            "3️⃣ Tap “Import” in the app or scan the QR code below\n\n"
+            "🔗 <b>Subscription URL:</b>\n<code>{url}</code>"
+        ),
+        "connect_qr_caption": "📷 QR code — scan it in the client app",
+        "install_happ": "📲 Install Happ",
+        "install_v2rayng": "📲 Install v2rayNG",
+        "connect_no_sub": "❌ No active subscription. Buy a plan in “💎 Plans” first.",
+        "plans_pick": "💎 <b>Choose a plan:</b>",
+        "plan_card_title": "💎 <b>{name}</b>\n{desc}\n\n⏳ {days} days · 📱 {devices} devices\n\n💳 Choose a payment method:",
+        "pay_stars_btn": "⭐ Stars — {stars}",
+        "pay_balance_btn": "💰 From balance — {price} ₽",
+        "balance_paid": "✅ <b>Paid!</b>\n\n“{plan}” is active. Connect via “🚀 Connect VPN”.",
+        "balance_insufficient": "❌ Insufficient balance. Pay with ⭐ Stars or top up your balance.",
+        "balance_error": "⚠️ Payment error. Please try again later.",
     },
 }
 

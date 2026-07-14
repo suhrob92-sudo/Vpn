@@ -34,8 +34,8 @@ async def upsert_from_telegram(
         user.username = tg_user.get("username")
         user.first_name = tg_user.get("first_name")
         user.last_name = tg_user.get("last_name")
-        if tg_user.get("language_code"):
-            user.language_code = tg_user.get("language_code")
+        # NOTE: language_code is intentionally NOT overwritten on refresh — once a
+        # user picks a language in the bot/app it must persist across /start.
         await db.flush()
     return user
 

@@ -11,16 +11,21 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, LabeledPrice, Message, PreCheckoutQuery
 
 from bot import api_client
-from bot.i18n import lang_of, t
+from bot.i18n import t
 from bot.keyboards import stars_plans_keyboard
+from bot.state import resolve_lang
 
 logger = logging.getLogger(__name__)
 router = Router()
 
 
+def _lang(u) -> str:
+    return resolve_lang(u.id, u.language_code) if u else "uz"
+
+
 @router.message(Command("stars"))
 async def cmd_stars(message: Message) -> None:
-    lang = lang_of(message.from_user.language_code if message.from_user else None)
+    lang = _lang(message.from_user)
     plans = await api_client.get_plans()
     payable = [p for p in plans if p.get("price_stars", 0) > 0]
     if not payable:
@@ -31,7 +36,7 @@ async def cmd_stars(message: Message) -> None:
 
 @router.callback_query(F.data.startswith("stars:"))
 async def stars_invoice(callback: CallbackQuery) -> None:
-    lang = lang_of(callback.from_user.language_code if callback.from_user else None)
+    lang = _lang(callback.from_user)
     plan_id = int(callback.data.split(":", 1)[1])
     plans = {p["id"]: p for p in await api_client.get_plans()}
     plan = plans.get(plan_id)
@@ -51,7 +56,7 @@ async def stars_invoice(callback: CallbackQuery) -> None:
 
 @router.pre_checkout_query()
 async def pre_checkout(query: PreCheckoutQuery) -> None:
-    lang = lang_of(query.from_user.language_code if query.from_user else None)
+    lang = _lang(query.from_user)
     plans = {p["id"]: p for p in await api_client.get_plans()}
     try:
         plan_id = int(query.invoice_payload.split(":", 1)[1])
@@ -66,7 +71,7 @@ async def pre_checkout(query: PreCheckoutQuery) -> None:
 
 @router.message(F.successful_payment)
 async def successful_payment(message: Message) -> None:
-    lang = lang_of(message.from_user.language_code if message.from_user else None)
+    lang = _lang(message.from_user)
     sp = message.successful_payment
     plan_id = int(sp.invoice_payload.split(":", 1)[1])
     try:
